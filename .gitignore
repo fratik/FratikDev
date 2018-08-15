@@ -1,0 +1,14 @@
+// DANE
+dane.sqlite
+bwd/provider/*
+config.json
+
+// MODUŁY
+node_modules/*
+
+// INNE
+.vscode/*
+**/**/.DS_Store
+
+// LOGI
+*.log
