@@ -2,6 +2,7 @@ const { Event } = require("klasa");
 const { MessageEmbed } = require("discord.js");
 const moment = require("moment");
 const sql = require("sqlite");
+const ids = require("./../ids.json");
 sql.open("./dane.sqlite");
 
 module.exports = class extends Event {
@@ -16,7 +17,7 @@ module.exports = class extends Event {
   async run(msg) {
     if (msg.author.id === this.client.user.id) return;
     switch (msg.channel.id) {
-    case "424310954507894784": {
+    case ids.c1: {
       if (!msg.poprawnyFormat) return;
       if (this.ignored.has(msg.id)) return this.ignored.delete(msg.id);
       await sql.run(`DELETE FROM urlopy WHERE userId = ${msg.author.id}`).catch(() => undefined);
@@ -51,7 +52,7 @@ module.exports = class extends Event {
         .setColor("#ff8c00")
         .setFooter("Anulowany urlop | usunięcie wiadomości")
         .addField("Powód anulowania", failed ? "brak powodu" : awaited.first().content);
-      return this.client.channels.get("462258545908514820").send(logEmbed);
+      return this.client.channels.get(ids.c3).send(logEmbed);
     }
     }
   }

@@ -1,5 +1,6 @@
 const { Event } = require("klasa");
 const sql = require("sqlite");
+const ids = require("./../ids.json");
 sql.open("./dane.sqlite");
 const moment = require("moment");
 module.exports = class extends Event {
@@ -12,7 +13,7 @@ module.exports = class extends Event {
 
   async run(oMsg, nMsg) {
     switch (oMsg) {
-    case "424310954507894784": {
+    case ids.c1: {
       if (oMsg.content === nMsg.content) return;
       await oMsg.channel.send(`${oMsg.author.toString()}: Nie można edytować urlopów! Usuwam Twój urlop!`);
       await oMsg.delete();
