@@ -3,6 +3,7 @@ const { MessageEmbed } = require("discord.js");
 const moment = require("moment");
 moment.locale("pl");
 const sql = require("sqlite");
+const ids = require("./../ids.json");
 sql.open("./dane.sqlite");
 
 const REGEXOD = /(?:od:? ?)(0?[1-9]|[12]\d|3[01])(?:\.|\/|-)(0?[1-9]|1[0-2])(?:\.|\/|-)(19|20\d{2})/img;
@@ -22,7 +23,7 @@ module.exports = class extends Event {
     if (msg.author.id === this.client.user.id) return;
     if (this.ignore === msg.author.id) return;
     switch (msg.channel.id) {
-    case "424310954507894784": {
+    case ids.c1: {
       REGEXOD.lastIndex = null;
       REGEXDO.lastIndex = null;
       const regDataOd = REGEXOD.exec(msg.content); //[cały string, dzień, miesiąc, rok]
@@ -37,7 +38,7 @@ module.exports = class extends Event {
           .setFooter("Odrzucony urlop")
           .addField("Powód odrzucenia", "Nieprawidłowy format")
           .addField("Osoba odrzucająca", this.client.user.tag);
-        await this.client.channels.get("462258545908514820").send(logEmbed);
+        await this.client.channels.get(ids.c3).send(logEmbed);
         setTimeout(() => _msg.delete().catch(() => undefined), 5e3);
         return;
       }
@@ -53,7 +54,7 @@ module.exports = class extends Event {
           .setFooter("Odrzucony urlop")
           .addField("Powód odrzucenia", "Różnica dat krótsza od 3 dni")
           .addField("Osoba odrzucająca", this.client.user.tag);
-        await this.client.channels.get("462258545908514820").send(logEmbed);
+        await this.client.channels.get(ids.c3).send(logEmbed);
         setTimeout(() => _msg.delete(), 5e3);
         return;
       }
@@ -75,7 +76,7 @@ module.exports = class extends Event {
             .setFooter("Odrzucony urlop")
             .addField("Powód odrzucenia", "Cooldown")
             .addField("Osoba odrzucająca", this.client.user.tag);
-          await this.client.channels.get("462258545908514820").send(logEmbed);
+          await this.client.channels.get(ids.c3).send(logEmbed);
           setTimeout(() => _msg.delete(), 5e3);
           return;
         }
@@ -94,11 +95,11 @@ module.exports = class extends Event {
           return sql.run("INSERT INTO urlopy (userId, od, do, zatwierdzony, msg) VALUES (?, ?, ?, ?, ?)", [msg.author.id, dataOd.unix(), dataDo.unix(), false, msg.id]);
         });
       await this.delayer(6e2);
-      await msg.react("436919889207361536");
+      await msg.react(ids.e1);
       await this.delayer(6e2);
-      await msg.react("436919889232658442");
+      await msg.react(ids.e2);
       await this.delayer(6e2);
-      await msg.channel.send("<@&414418843352432640>");
+      await msg.channel.send(`<@&${ids.r2}>`);
       return;
     }
     default: {

@@ -2,6 +2,7 @@ const { Event } = require("klasa");
 const { MessageEmbed } = require("discord.js");
 const moment = require("moment");
 const sql = require("sqlite");
+const ids = require("./../ids.json");
 sql.open("./dane.sqlite");
 
 const REGEXOD = /(?:od:? )(0?[1-9]|[12]\d|3[01])(?:\.|\/|-)(0?[1-9]|1[0-2])(?:\.|\/|-)(19|20\d{2})/img;
@@ -19,10 +20,10 @@ module.exports = class extends Event {
   async run(reaction, user) {
     if (user.id === this.client.user.id) return;
     switch (reaction.message.channel.id) {
-    case "424310954507894784": {
+    case ids.c1: {
       if (reaction.message.author.id === user.id) return reaction.users.remove(user.id);
-      if (!reaction.message.guild.members.get(user.id).roles.has("414418843352432640")) return reaction.users.remove(user.id);
-      for (const w of reaction.message.channel.messages.filter(m => m.author.id === this.client.user.id && m.content === "<@&414418843352432640>").array()) await w.delete().catch(() => undefined);
+      if (!reaction.message.guild.members.get(user.id).roles.has(ids.r2)) return reaction.users.remove(user.id);
+      for (const w of reaction.message.channel.messages.filter(m => m.author.id === this.client.user.id && m.content === "<@&"+ids.r2+">").array()) await w.delete().catch(() => undefined);
       switch (reaction.emoji.name) {
       case "redTick": {
         let failed = false;
@@ -58,7 +59,7 @@ module.exports = class extends Event {
           .addField("Osoba odrzucająca", user.tag);
         await sql.run(`DELETE FROM urlopy WHERE userId = ${reaction.message.author.id}`);
         await reaction.message.author.send("Twój urlop został odrzucony.");
-        return this.client.channels.get("462258545908514820").send(logEmbed);
+        return this.client.channels.get(ids.c3).send(logEmbed);
       }
       case "greenTick": {
         const logEmbed = new MessageEmbed()
@@ -79,13 +80,13 @@ module.exports = class extends Event {
         } else {
           await reaction.message.author.send("Twój urlop został przyjęty, a Twoja ranga zostanie tymczasowo zdjęta aż do końca urlopu (zgodnie z regulaminem). 🏖").catch(() => undefined);
         }
-        return this.client.channels.get("462258545908514820").send(logEmbed);
+        return this.client.channels.get(ids.c3).send(logEmbed);
       }
       }
       break;
     }
-    case "471367851316609034": {
-      const msg = reaction.message.channel.messages.get("471368232499150858");
+    case ids.c2: {
+      const msg = reaction.message.channel.messages.get(ids.m1);
       if (reaction.message.id !== msg.id) return;
       switch (reaction.emoji.name) {
       case "greenTick": {
@@ -109,8 +110,8 @@ module.exports = class extends Event {
             await sql.run("CREATE TABLE IF NOT EXISTS zweryfikowani (userId TEXT, date INTEGER, ostatniaWiadomosc INTEGER)");
             await sql.run("INSERT INTO zweryfikowani (userId, date) VALUES (?, ?)", [member.id, moment().unix()]);
           });
-        const _m = await msg.channel.send(`${member.toString()}, witamy w gronie zweryfikowanych! Główny kanał to <#442244382989746196> btw.`);
-        await member.roles.add("399554591630557185");
+        const _m = await msg.channel.send(`${member.toString()}, witamy w gronie zweryfikowanych! Główny kanał to <#${ids.c4}> btw.`);
+        await member.roles.add(ids.r3);
         await reaction.users.remove(user.id);
         await _m.delete();
         return;
