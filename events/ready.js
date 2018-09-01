@@ -12,6 +12,7 @@ module.exports = class extends Event {
       enabled: true
     });
     this.delayer = time => new Promise(res => setTimeout(() => res(), time));
+    this.niewiemjaktonazwacaletojakislockorsomeshithahafajnanazwapropanie = false;
   }
 
   async run() {
@@ -62,6 +63,8 @@ module.exports = class extends Event {
       }
     }, 15e3);
     this.client.setInterval(async() => {
+      if (this.niewiemjaktonazwacaletojakislockorsomeshithahafajnanazwapropanie) return;
+      this.niewiemjaktonazwacaletojakislockorsomeshithahafajnanazwapropanie = true;
       const rows = await sql.all("SELECT * FROM zweryfikowani").catch(() => { return []; });
       const roleDoOdebrania = [];
       for (const row of rows) {
@@ -83,6 +86,7 @@ module.exports = class extends Event {
         this.client.console.log("Te osoby to:");
         this.client.console.log(roleDoOdebrania.map(u => u.tag));
       }
+      this.niewiemjaktonazwacaletojakislockorsomeshithahafajnanazwapropanie = false;
     }, 30e3);
     this.client.ready = true;
   }
