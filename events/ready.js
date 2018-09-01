@@ -70,7 +70,7 @@ module.exports = class extends Event {
         const dateDo = moment(new Date().setHours(0, 0, 0, 0));
         const member = this.client.guilds.get(ids.g1).member(row.userId);
         if (!member) continue;
-        if (moment(dateOd.toDate().setHours(0, 0, 0, 0)).add(3, "days").unix() >= dateDo.unix()) {
+        if (moment(dateOd.toDate().setHours(0, 0, 0, 0)).add(4, "days").unix() <= dateDo.unix()) {
           if (member.roles.has(ids.r3)) {
             await sql.run(`DELETE FROM zweryfikowani WHERE userId = ${member.id}`);
             roleDoOdebrania.push(member.user);
