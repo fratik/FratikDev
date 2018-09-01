@@ -104,12 +104,12 @@ module.exports = class extends Event {
     }
     default: {
       const row = await sql.get(`SELECT * FROM zweryfikowani WHERE userId = ${msg.author.id}`);
-      if (!row) await sql.run("INSERT INTO zweryfikowani (userId, date, ostatniaWiadomosc) VALUES (?, ?, ?)", [msg.author.id, moment().unix(), msg.createdTimestamp]);
+      if (!row) await sql.run("INSERT INTO zweryfikowani (userId, date, ostatniaWiadomosc) VALUES (?, ?, ?)", [msg.author.id, moment().unix(), moment(msg.createdTimestamp).unix()]);
       else {
         await sql.run(`UPDATE zweryfikowani SET ostatniaWiadomosc = ${msg.createdTimestamp} WHERE userId = ${msg.author.id}`)
           .catch(async() => {
             await sql.run("CREATE TABLE IF NOT EXISTS zweryfikowani (userId TEXT, date INTEGER, ostatniaWiadomosc INTEGER)");
-            await sql.run("INSERT INTO zweryfikowani (userId, date, ostatniaWiadomosc) VALUES (?, ?, ?)", [msg.author.id, moment().unix(), msg.createdTimestamp]);
+            await sql.run("INSERT INTO zweryfikowani (userId, date, ostatniaWiadomosc) VALUES (?, ?, ?)", [msg.author.id, moment().unix(), moment(msg.createdTimestamp).unix()]);
           });
       }
     }

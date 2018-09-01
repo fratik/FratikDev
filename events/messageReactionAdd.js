@@ -23,7 +23,7 @@ module.exports = class extends Event {
     case ids.c1: {
       if (reaction.message.author.id === user.id) return reaction.users.remove(user.id);
       if (!reaction.message.guild.members.get(user.id).roles.has(ids.r2)) return reaction.users.remove(user.id);
-      for (const w of reaction.message.channel.messages.filter(m => m.author.id === this.client.user.id && m.content === "<@&"+ids.r2+">").array()) await w.delete().catch(() => undefined);
+      for (const w of reaction.message.channel.messages.filter(m => m.author.id === this.client.user.id && m.content === "<@&" + ids.r2 + ">").array()) await w.delete().catch(() => undefined);
       switch (reaction.emoji.name) {
       case "redTick": {
         let failed = false;
@@ -105,6 +105,7 @@ module.exports = class extends Event {
           await _m.delete();
           return;
         }
+        await sql.run(`DELETE FROM zweryfikowani WHERE userId = ${member.id}`).catch(() => undefined);
         await sql.run("INSERT INTO zweryfikowani (userId, date) VALUES (?, ?)", [member.id, moment().unix()])
           .catch(async() => {
             await sql.run("CREATE TABLE IF NOT EXISTS zweryfikowani (userId TEXT, date INTEGER, ostatniaWiadomosc INTEGER)");
