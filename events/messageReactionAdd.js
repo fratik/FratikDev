@@ -1,12 +1,16 @@
 const { Event } = require("klasa");
 const { MessageEmbed } = require("discord.js");
-const moment = require("moment");
 const sql = require("sqlite");
+const MomentRange = require("moment-range");
+const moment = MomentRange.extendMoment(require("moment"));
 const ids = require("./../ids.json");
+const config = require("./../config.json");
 sql.open("./dane.sqlite");
 
 const REGEXOD = /(?:od:? )(0?[1-9]|[12]\d|3[01])(?:\.|\/|-)(0?[1-9]|1[0-2])(?:\.|\/|-)(19|20\d{2})/img;
 const REGEXDO = /(?:do:? )(0?[1-9]|[12]\d|3[01])(?:\.|\/|-)(0?[1-9]|1[0-2])(?:\.|\/|-)(19|20\d{2})/img;
+const blokadaOd = config.blokadaOd;
+const blokadaDo = config.blokadaDo;
 
 module.exports = class extends Event {
 
@@ -90,6 +94,14 @@ module.exports = class extends Event {
       if (reaction.message.id !== msg.id) return;
       switch (reaction.emoji.name) {
       case "greenTick": {
+        const range = moment.range(new Date().setHours(blokadaOd, 0, 0, 0, 0), moment(new Date().setHours(blokadaDo, 0, 0, 0, 0)).add(1, "day").toDate());
+        if (range.contains(moment())) {
+          const _m = await msg.channel.send(`${user.toString()}, nie jest trochę za późno na weryfikację? Spróbuj ponownie w normalnej porze!`);
+          await reaction.users.remove(user.id);
+          await this.delayer(5e3);
+          await _m.delete();
+          return;
+        }
         const member = msg.guild.members.get(user.id);
         if (moment(member.joinedAt).diff(moment()) > -300000) {
           const _m = await msg.channel.send(`Ejejej, ${user.toString()}! Widzę co tam robisz, nawet 5 minut nie minęło odkąd dołączyłeś/aś tutaj! Nie ma szans byś w tak krótki okres czasu przeczytał(a) regulamin!`);
