@@ -94,7 +94,17 @@ module.exports = class extends Event {
       if (reaction.message.id !== msg.id) return;
       switch (reaction.emoji.name) {
       case "greenTick": {
-        const range = moment.range(new Date().setHours(blokadaOd, 0, 0, 0, 0), moment(new Date().setHours(blokadaDo, 0, 0, 0, 0)).add(1, "day").toDate());
+        if (moment.range(new Date().setHours(0, 0, 0, 0), moment(new Date().setHours(blokadaDo, 0, 0, 0)).add(1, "day")).contains(moment())) {
+          const range = moment.range(moment(new Date().setHours(blokadaOd, 0, 0, 0, 0)).subtract(1, "day"), new Date().setHours(blokadaDo, 0, 0, 0, 0));
+          if (range.contains(moment())) {
+            const _m = await msg.channel.send(`${user.toString()}, nie jest trochę za późno na weryfikację? Spróbuj ponownie w normalnej porze!`);
+            await reaction.users.remove(user.id);
+            await this.delayer(5e3);
+            await _m.delete();
+            return;
+          }
+        }
+        const range = moment.range(new Date().setHours(blokadaOd, 0, 0, 0), moment(new Date().setHours(blokadaDo, 0, 0, 0)).add(1, "day"));
         if (range.contains(moment())) {
           const _m = await msg.channel.send(`${user.toString()}, nie jest trochę za późno na weryfikację? Spróbuj ponownie w normalnej porze!`);
           await reaction.users.remove(user.id);
