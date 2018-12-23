@@ -54,8 +54,8 @@ public class Weryfikacja {
                         .collect(Collectors.toList())) {
                     WeryfikacjaInfo weryfikacjaInfo = managerBazyDanych.getWeryfikacja(mem.getUser());
                     if (weryfikacjaInfo == null) {
-                    mem.getGuild().getController().removeSingleRoleFromMember(mem,
-                            jda.getRoleById(Config.instance.role.rolaUzytkownika)).complete();
+                        mem.getGuild().getController().removeSingleRoleFromMember(mem,
+                                jda.getRoleById(Config.instance.role.rolaUzytkownika)).complete();
                         zabrano.put(mem, Typ.BRAKDANYCH);
                         continue;
                     }

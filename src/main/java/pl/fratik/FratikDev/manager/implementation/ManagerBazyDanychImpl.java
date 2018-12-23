@@ -76,11 +76,15 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
         try { JSONed = mapper.writeValueAsString(entity); } catch (Exception ignored) { JSONed = entity.toString(); }
         logger.debug("Zmiana danych w DB: {} -> {} -> {}", entity.getTableName(), entity.getClass().getName(), JSONed);
         if (entity instanceof Urlop) save((Urlop) entity);
-
+        if (entity instanceof WeryfikacjaInfo) save((WeryfikacjaInfo) entity);
     }
 
     private void save(@NotNull Urlop config) {
         pgStore.mapSync(Urlop.class).save(config);
+    }
+
+    private void save(@NotNull WeryfikacjaInfo config) {
+        pgStore.mapSync(WeryfikacjaInfo.class).save(config);
     }
 
 }
