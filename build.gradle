@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id "com.github.johnrengelman.shadow" version "4.0.3"
+}
+
+group 'pl.fratik'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+def jdaVersion = '3.8.1_447'
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url "https://plugins.gradle.org/m2/" }
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compile 'net.dv8tion:JDA:' + jdaVersion
+    compile 'com.intellij:annotations:+@jar'
+    compile 'org.slf4j:slf4j-api:1.7.5'
+    compile 'ch.qos.logback:logback-classic:1.2.3'
+    compile 'org.tuxdude.logback.extensions:logback-colorizer:1.0.1'
+    compile 'com.google.guava:guava:21.0'
+    compile 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.github.queer:async-postgres-jsonb-orm:e348e109f8'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+compileJava {
+    options.compilerArgs << '-parameters' // reflection fix
+}
+
+shadowJar {
+    manifest {
+        attributes 'Implementation-Title': 'FratikDev', 'Implementation-Version': version
+        attributes 'Main-Class': 'pl.fratik.FratikDev.Main'
+    }
+}
+
+compileJava.options.encoding = 'UTF-8'
