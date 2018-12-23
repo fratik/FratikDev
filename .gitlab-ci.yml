@@ -12,6 +12,12 @@ stages:
 build:
   stage: build
   script: ./gradlew shadowJar
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: push
+    paths:
+      - build
+      - .gradle
   artifacts:
     paths:
       - build/libs/*
