@@ -139,7 +139,7 @@ public class PgMapper<T> {
     public void delete(final Object pk) {
         store.sql("DELETE FROM " + table.value() + " WHERE " + primaryKey.value() + " = ?;", c -> {
             c.setObject(1, pk);
-            c.executeQuery();
+            c.execute();
         });
     }
 

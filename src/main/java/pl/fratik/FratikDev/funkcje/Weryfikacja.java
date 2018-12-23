@@ -59,8 +59,11 @@ public class Weryfikacja {
                         zabrano.put(mem, Typ.BRAKDANYCH);
                         continue;
                     }
+                    Date data;
+                    if (weryfikacjaInfo.getOstatniaWiadomosc() != null) data = weryfikacjaInfo.getOstatniaWiadomosc();
+                    else data = weryfikacjaInfo.getWeryfikacja();
                     Calendar cal2 = Calendar.getInstance();
-                    cal2.setTime(weryfikacjaInfo.getOstatniaWiadomosc());
+                    cal2.setTime(data);
                     cal2.add(Calendar.DAY_OF_MONTH, 3);
                     Date koniec = Date.from(cal2.toInstant());
                     if (!dzisiaj.equals(koniec)) continue;
@@ -123,6 +126,7 @@ public class Weryfikacja {
         if (author.isBot()) return;
         WeryfikacjaInfo info = managerBazyDanych.getWeryfikacja(author);
         if (info == null) info = new WeryfikacjaInfo(author.getId());
+        if (info.getOstatniaWiadomosc() == null) return;
         info.setOstatniaWiadomosc(Date.from(e.getMessage().getCreationTime().toInstant()));
         managerBazyDanych.save(info);
     }
