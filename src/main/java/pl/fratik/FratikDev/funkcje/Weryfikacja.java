@@ -126,7 +126,7 @@ public class Weryfikacja {
         if (author.isBot()) return;
         WeryfikacjaInfo info = managerBazyDanych.getWeryfikacja(author);
         if (info == null) info = new WeryfikacjaInfo(author.getId());
-        if (info.getOstatniaWiadomosc() == null) return;
+        if (info.getWeryfikacja() == null) return;
         info.setOstatniaWiadomosc(Date.from(e.getMessage().getCreationTime().toInstant()));
         managerBazyDanych.save(info);
     }
