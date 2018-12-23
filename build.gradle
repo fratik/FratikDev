@@ -1,3 +1,5 @@
+import net.nemerosa.versioning.ReleaseInfo
+
 plugins {
     id 'java'
     id "com.github.johnrengelman.shadow" version "4.0.3"
@@ -5,7 +7,6 @@ plugins {
 }
 
 group 'pl.fratik'
-version versioning.info.full
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -19,6 +20,7 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
+
 dependencies {
     compile 'net.dv8tion:JDA:' + jdaVersion
     compile 'com.intellij:annotations:+@jar'
@@ -31,6 +33,56 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
+versioning {
+    /**
+     * Defines the SCM to use in order to collect information.
+     *
+     * At the moment, only Git (git) and Subversion (svn) are supported.
+     */
+    scm = 'git'
+    /**
+     * Computation of the release type and the base, by parsing the scm info.
+     * By default, we use "/" as a separator in branch name between the type and the base. If not
+     * present, the type is the branch and the base is empty.
+     * F.e. if you want use tag name instead of branch you may provide something like:
+     */
+    releaseParser = { scmInfo, separator = '/' ->
+        List<String> part = scmInfo.tag.split('/') + ''
+        new ReleaseInfo(type: part[0], base: part[1])
+    }
+    /**
+     * Fetch branch name from environment variables. Useful when using CI like
+     * Travis or Jenkins.
+     */
+    branchEnv = ['TRAVIS_BRANCH', 'GIT_BRANCH', 'SVN_BRANCH', 'BRANCH_NAME']
+
+    /**
+     * Computation of the full version
+     */
+    full = { scmInfo ->
+        if (scmInfo.tag) {
+            return "${scmInfo.tag}"
+        } else {
+            return "${scmInfo.branch}-${scmInfo.abbreviated}"
+        } }
+
+    dirty = { version -> "${version}${dirtySuffix}" }
+
+    /**
+     * Set of eligible branch types for computing a display version from the branch base name
+     */
+    releases = ['release']
+    /**
+     * Pattern used to match when looking for the last tag. By default, checks for any
+     * tag having a last part being numeric. At least one numeric grouping
+     * expression is required. The first one will be used to reverse order
+     * the tags in Git.
+     */
+    lastTagPattern = /(\d+)$/
+}
+
+version versioning.info.full
+
 compileJava {
     options.compilerArgs << '-parameters' // reflection fix
 }
@@ -41,5 +93,6 @@ shadowJar {
         attributes 'Main-Class': 'pl.fratik.FratikDev.Main'
     }
 }
+
 
 compileJava.options.encoding = 'UTF-8'
