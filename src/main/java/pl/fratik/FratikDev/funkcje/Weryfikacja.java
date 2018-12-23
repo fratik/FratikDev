@@ -49,7 +49,8 @@ public class Weryfikacja {
                 cal.set(Calendar.SECOND, 0);
                 dzisiaj = Date.from(cal.toInstant());
                 for (Member mem : jda.getGuildById(Config.instance.guildId).getMembers().stream()
-                        .filter(m -> m.getRoles().contains(jda.getRoleById(Config.instance.role.rolaUzytkownika)))
+                        .filter(m -> m.getRoles().contains(jda.getRoleById(Config.instance.role.rolaUzytkownika)) &&
+                                !m.getUser().isBot())
                         .collect(Collectors.toList())) {
                     WeryfikacjaInfo weryfikacjaInfo = managerBazyDanych.getWeryfikacja(mem.getUser());
                     if (weryfikacjaInfo == null) {
@@ -119,6 +120,7 @@ public class Weryfikacja {
     @Subscribe
     public void onMessage(MessageReceivedEvent e) {
         User author = e.getAuthor();
+        if (author.isBot()) return;
         WeryfikacjaInfo info = managerBazyDanych.getWeryfikacja(author);
         if (info == null) info = new WeryfikacjaInfo(author.getId());
         info.setOstatniaWiadomosc(Date.from(e.getMessage().getCreationTime().toInstant()));
