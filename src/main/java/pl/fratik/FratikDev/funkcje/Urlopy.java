@@ -54,6 +54,7 @@ public class Urlopy {
                 cal.set(Calendar.HOUR_OF_DAY, 0);
                 cal.set(Calendar.MINUTE, 0);
                 cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
                 dzisiaj = Date.from(cal.toInstant());
                 for (Urlop u : managerBazyDanych.getAllUrlopy()) {
                     if (u.getDataOd().equals(dzisiaj)) jda.getGuildById(Config.instance.guildId).getController()
@@ -217,6 +218,7 @@ public class Urlopy {
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
         d = Date.from(cal.toInstant());
         data.setCooldownTo(d);
         msg.addReaction(msg.getJDA().getEmoteById(Config.instance.emotki.greenTick)).queue();
@@ -270,6 +272,7 @@ public class Urlopy {
                     cal.set(Calendar.HOUR_OF_DAY, 0);
                     cal.set(Calendar.MINUTE, 0);
                     cal.set(Calendar.SECOND, 0);
+                    cal.set(Calendar.MILLISECOND, 0);
                     dzisiaj = Date.from(cal.toInstant());
                     if (data.getDataOd().equals(dzisiaj)) msg.getGuild().getController()
                             .removeSingleRoleFromMember(msg.getMember(),

@@ -47,6 +47,7 @@ public class Weryfikacja {
                 cal.set(Calendar.HOUR_OF_DAY, 0);
                 cal.set(Calendar.MINUTE, 0);
                 cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
                 dzisiaj = Date.from(cal.toInstant());
                 for (Member mem : jda.getGuildById(Config.instance.guildId).getMembers().stream()
                         .filter(m -> m.getRoles().contains(jda.getRoleById(Config.instance.role.rolaUzytkownika)) &&
@@ -147,13 +148,15 @@ public class Weryfikacja {
             cal.set(Calendar.HOUR_OF_DAY, Config.instance.blokadaOd);
             cal.set(Calendar.MINUTE, 0);
             cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
             wczesniejsza = Date.from(cal.toInstant());
             Date pozniejsza = new Date();
             Calendar cal2 = Calendar.getInstance();
             cal2.setTime(pozniejsza);
             cal2.set(Calendar.HOUR_OF_DAY, Config.instance.blokadaDo);
             cal2.set(Calendar.MINUTE, 0);
-             cal2.set(Calendar.SECOND, 0);
+            cal2.set(Calendar.SECOND, 0);
+            cal2.set(Calendar.MILLISECOND, 0);
             pozniejsza = Date.from(cal2.toInstant());
             Date pozniejsza1 = new Date();
             Calendar cal3 = Calendar.getInstance();
@@ -161,6 +164,7 @@ public class Weryfikacja {
             cal3.set(Calendar.HOUR_OF_DAY, Config.instance.blokadaDo);
             cal3.set(Calendar.MINUTE, 0);
             cal3.set(Calendar.SECOND, 0);
+            cal3.set(Calendar.MILLISECOND, 0);
             cal3.add(Calendar.DAY_OF_MONTH, 1);
             pozniejsza1 = Date.from(cal3.toInstant());
             Date teraz = new Date();
