@@ -21,7 +21,6 @@ build:
       - build/classes
       - build/resources
       - .gradle
-      - .mvn
   artifacts:
     paths:
       - build/libs/*

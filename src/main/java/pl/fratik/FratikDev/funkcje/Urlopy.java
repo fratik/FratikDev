@@ -86,6 +86,7 @@ public class Urlopy {
                 LoggerFactory.getLogger(Urlopy.class).error("coś nie pykło", t);
                 intervalLock = false;
             }
+            intervalLock = false;
         }, 15, 15, TimeUnit.SECONDS);
     }
 
