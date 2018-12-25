@@ -47,7 +47,9 @@ versioning {
      * F.e. if you want use tag name instead of branch you may provide something like:
      */
     releaseParser = { scmInfo, separator = '/' ->
-        List<String> part = scmInfo.tag.split('/') + ''
+        List<String> part
+        if (scmInfo.tag) part = scmInfo.tag.split('/') + ''
+        else part = scmInfo.branch.split('/', 2) + ''
         new ReleaseInfo(type: part[0], base: part[1])
     }
     /**
