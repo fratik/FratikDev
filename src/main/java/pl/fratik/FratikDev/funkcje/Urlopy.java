@@ -61,7 +61,7 @@ public class Urlopy {
                             .removeSingleRoleFromMember(jda.getGuildById(Config.instance.guildId).getMemberById(u.getId()),
                                     jda.getGuildById(Config.instance.guildId)
                                             .getRoleById(Config.instance.role.globalAdmin)).complete();
-                    if (u.getDataDo().equals(dzisiaj)) {
+                    if (u.getDataDo().equals(dzisiaj) && !u.isValid()) {
                         u.setValid(false);
                         managerBazyDanych.save(u);
                         jda.getGuildById(Config.instance.guildId).getController()
