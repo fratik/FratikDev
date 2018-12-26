@@ -87,8 +87,12 @@ public class Urlopy {
                                 + mem.getEffectiveName();
                         if (nick.length() >= 32) nick = nick.substring(0, 29) + "...";
                         mem.getGuild().getController().setNickname(mem,  nick).complete();
-                    } else if ((mem.getNickname() == null ? "" : mem.getNickname()).startsWith("[Wagary")) {
-                        mem.getGuild().getController().setNickname(mem, null).complete();
+                    } else {
+                        String effName = mem.getNickname();
+                        if (effName == null) effName = "";
+                        if (effName.startsWith("[Wagary")) {
+                            mem.getGuild().getController().setNickname(mem, null).complete();
+                        }
                     }
                     if (u.getCooldownTo() != null && u.getCooldownTo().equals(dzisiaj)) {
                         managerBazyDanych.usunUrlop(jda.getUserById(u.getId()));
