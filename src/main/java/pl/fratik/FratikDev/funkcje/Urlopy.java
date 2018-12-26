@@ -90,6 +90,7 @@ public class Urlopy {
                         if (nick.length() >= 32) nick = nick.substring(0, 29) + "...";
                         mem.getGuild().getController().setNickname(mem,  nick).complete();
                     } else {
+                        if (mem == null) continue;
                         String effName = mem.getNickname();
                         if (effName == null) effName = "";
                         if (effName.startsWith("[Wagary")) {
