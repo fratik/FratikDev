@@ -82,11 +82,11 @@ public class Urlopy {
                     Member mem = jda.getGuildById(Config.instance.guildId).getMemberById(u.getId());
                     if (u.getDataOd().before(new Date()) && u.getDataDo().after(new Date())) {
                         if (mem == null) continue;
-                        if (mem.getNickname() != null && mem.getNickname().startsWith("[Wagary")) continue;
-                        String nick = "[Wagary " + (int)
+                        String _nick = "[Wagary " + (int)
                                 Math.floor((double) (dzisiaj.toInstant().toEpochMilli() - u.getDataDo()
-                                        .toInstant().toEpochMilli()) / 1000 / 60 / 60 / 24) * -1 + "d] "
-                                + mem.getEffectiveName();
+                                        .toInstant().toEpochMilli()) / 1000 / 60 / 60 / 24) * -1 + "d] ";
+                        String nick = _nick + mem.getEffectiveName().replaceAll("\\[Wagary \\dd] ", "");
+                        if (mem.getNickname() != null && mem.getNickname().startsWith(_nick)) continue;
                         if (nick.length() >= 32) nick = nick.substring(0, 29) + "...";
                         mem.getGuild().getController().setNickname(mem,  nick).complete();
                     } else {
