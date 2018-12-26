@@ -81,6 +81,8 @@ public class Urlopy {
                     }
                     Member mem = jda.getGuildById(Config.instance.guildId).getMemberById(u.getId());
                     if (u.getDataOd().before(new Date()) && u.getDataDo().after(new Date())) {
+                        if (mem == null) continue;
+                        if (mem.getNickname() != null && mem.getNickname().startsWith("[Wagary")) continue;
                         String nick = "[Wagary " + (int)
                                 Math.floor((double) (dzisiaj.toInstant().toEpochMilli() - u.getDataDo()
                                         .toInstant().toEpochMilli()) / 1000 / 60 / 60 / 24) * -1 + "d] "
