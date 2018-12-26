@@ -62,7 +62,7 @@ public class Urlopy {
                                                     .getRoleById(Config.instance.role.globalAdmin)).complete();
                         }
                     }
-                    if (u.getDataDo().equals(dzisiaj) && !u.isValid()) {
+                    if (u.getDataDo().equals(dzisiaj) && u.isValid()) {
                         u.setValid(false);
                         managerBazyDanych.save(u);
                         jda.getGuildById(Config.instance.guildId).getController()
