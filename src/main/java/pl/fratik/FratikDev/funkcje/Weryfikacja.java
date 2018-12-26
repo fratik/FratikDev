@@ -36,7 +36,7 @@ public class Weryfikacja {
         zRegMes = jda.getTextChannelById(Config.instance.kanaly.zatwierdzRegulamin).getMessageById(Config.instance.wiadomosci.zatwierdzRegulaminWiadomosc).complete();
         zRegMes.addReaction(jda.getEmoteById(Config.instance.emotki.greenTick)).complete();
         zRegMes.addReaction(jda.getEmoteById(Config.instance.emotki.redTick)).complete();
-        Executors.newScheduledThreadPool(2).scheduleAtFixedRate(() -> {
+        Executors.newScheduledThreadPool(2).scheduleWithFixedDelay(() -> {
             if (intervalLock) return;
             intervalLock = true;
             try {

@@ -44,7 +44,7 @@ public class Urlopy {
     public Urlopy(ManagerBazyDanych managerBazyDanych, EventWaiter eventWaiter, JDA jda) {
         this.managerBazyDanych = managerBazyDanych;
         this.eventWaiter = eventWaiter;
-        Executors.newScheduledThreadPool(2).scheduleAtFixedRate(() -> {
+        Executors.newScheduledThreadPool(2).scheduleWithFixedDelay(() -> {
             try {
                 if (intervalLock) return;
                 intervalLock = true;
@@ -82,12 +82,12 @@ public class Urlopy {
                         managerBazyDanych.usunUrlop(jda.getUserById(u.getId()));
                     }
                 }
+                intervalLock = false;
             } catch (Throwable t) {
                 LoggerFactory.getLogger(Urlopy.class).error("coś nie pykło", t);
                 intervalLock = false;
             }
-            intervalLock = false;
-        }, 15, 15, TimeUnit.SECONDS);
+        }, 60, 60, TimeUnit.SECONDS);
     }
 
     @Subscribe
