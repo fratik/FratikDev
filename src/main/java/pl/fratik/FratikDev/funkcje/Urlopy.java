@@ -3,10 +3,7 @@ package pl.fratik.FratikDev.funkcje;
 import com.google.common.eventbus.Subscribe;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.ISnowflake;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.MessageUpdateEvent;
@@ -57,10 +54,14 @@ public class Urlopy {
                 cal.set(Calendar.MILLISECOND, 0);
                 dzisiaj = Date.from(cal.toInstant());
                 for (Urlop u : managerBazyDanych.getAllUrlopy()) {
-                    if (u.getDataOd().equals(dzisiaj)) jda.getGuildById(Config.instance.guildId).getController()
-                            .removeSingleRoleFromMember(jda.getGuildById(Config.instance.guildId).getMemberById(u.getId()),
-                                    jda.getGuildById(Config.instance.guildId)
-                                            .getRoleById(Config.instance.role.globalAdmin)).complete();
+                    if (u.getDataOd().equals(dzisiaj)) {
+                        if (!(u.getDataOd().toInstant().toEpochMilli() - u.getDataDo().toInstant().toEpochMilli() >= -1209600000)) {
+                            jda.getGuildById(Config.instance.guildId).getController()
+                                    .removeSingleRoleFromMember(jda.getGuildById(Config.instance.guildId).getMemberById(u.getId()),
+                                            jda.getGuildById(Config.instance.guildId)
+                                                    .getRoleById(Config.instance.role.globalAdmin)).complete();
+                        }
+                    }
                     if (u.getDataDo().equals(dzisiaj) && !u.isValid()) {
                         u.setValid(false);
                         managerBazyDanych.save(u);
@@ -77,6 +78,17 @@ public class Urlopy {
                                         .addField("Powód końca", "Czas się skończył!", false)
                                         .build()
                         ).queue();
+                    }
+                    Member mem = jda.getGuildById(Config.instance.guildId).getMemberById(u.getId());
+                    if (u.getDataOd().before(new Date()) && u.getDataDo().after(new Date())) {
+                        String nick = "[Wagary " + (int)
+                                Math.floor((double) (dzisiaj.toInstant().toEpochMilli() - u.getDataDo()
+                                        .toInstant().toEpochMilli()) / 1000 / 60 / 60 / 24) * -1 + "d] "
+                                + mem.getEffectiveName();
+                        if (nick.length() >= 32) nick = nick.substring(0, 29) + "...";
+                        mem.getGuild().getController().setNickname(mem,  nick).complete();
+                    } else if ((mem.getNickname() == null ? "" : mem.getNickname()).startsWith("[Wagary")) {
+                        mem.getGuild().getController().setNickname(mem, null).complete();
                     }
                     if (u.getCooldownTo() != null && u.getCooldownTo().equals(dzisiaj)) {
                         managerBazyDanych.usunUrlop(jda.getUserById(u.getId()));
