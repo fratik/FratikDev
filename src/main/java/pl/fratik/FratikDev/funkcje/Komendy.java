@@ -21,11 +21,11 @@ public class Komendy {
         Message msg = e.getMessage();
         if (!msg.isMentioned(e.getJDA().getSelfUser())) return;
         if (!e.getGuild().getId().equals(Config.instance.guildId)) return;
-        if (!msg.getContentRaw().startsWith(e.getJDA().getSelfUser().getAsMention() + ", ")) {
+        if (!msg.getContentRaw().replaceAll("<@!", "<@").startsWith(e.getJDA().getSelfUser().getAsMention() + ", ")) {
             e.getChannel().sendMessage(String.format("Co ja? [%s, help]", e.getJDA().getSelfUser().getAsMention())).queue();
             return;
         }
-        String content = e.getMessage().getContentRaw().substring((e.getJDA().getSelfUser().getAsMention() + ", ").length());
+        String content = e.getMessage().getContentRaw().replaceAll("<@!", "<@").substring((e.getJDA().getSelfUser().getAsMention() + ", ").length());
         if (content.isEmpty()) return;
         List<String> _args = new ArrayList<>(Arrays.asList(content.split(" ")));
         String command = _args.get(0);
