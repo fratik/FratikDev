@@ -106,7 +106,7 @@ public class Komendy {
                         }
                     }
                 }).start();
-                while (done.get() + errors.get() != e.getGuild().getMembers().size()) {
+                while (done.get() + errors.get() != e.getGuild().getMembers().stream().filter(m -> m.getEffectiveName().endsWith(suffix)).count()) {
                     mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                             .getAsMention() + " Pracuję... " +
                             String.format("%s/%s", String.valueOf(done.get() + errors.get()),
@@ -138,9 +138,11 @@ public class Komendy {
                             boolean oho = matcher.find();
                             if (oho) nowyNick = nowyNick.replaceFirst(Pattern.quote(matcher.group(1)), "");
                             if (nowyNick.isEmpty()) nowyNick = "mam rakowy nick";
-                            if (m.getEffectiveName().equals(nowyNick)) continue;
+                            if (m.getEffectiveName().equals(nowyNick)) {
+                                done.getAndAdd(1);
+                                continue;
+                            }
                             e.getGuild().getController().setNickname(m, nowyNick).complete();
-                            done.getAndAdd(1);
                         } catch (Throwable ignored) {
                             errors.getAndAdd(1);
                         }
