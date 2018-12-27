@@ -27,10 +27,12 @@ public class Config {
     public class Emotki {
         public String greenTick = "436919889207361536";
         public String redTick = "436919889232658442";
+        public String loading = "503651397049516053";
     }
 
     public class Role {
         public String globalAdmin = "";
+        public String admin = "";
         public String zarzadzajacyGa = "";
         public String rolaUzytkownika = "";
     }

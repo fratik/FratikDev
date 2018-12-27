@@ -85,7 +85,7 @@ public class Urlopy {
                         String _nick = "[Wagary " + (int)
                                 Math.floor((double) (dzisiaj.toInstant().toEpochMilli() - u.getDataDo()
                                         .toInstant().toEpochMilli()) / 1000 / 60 / 60 / 24) * -1 + "d] ";
-                        String nick = _nick + mem.getEffectiveName().replaceAll("\\[Wagary \\dd] ", "");
+                        String nick = _nick + mem.getEffectiveName().replaceAll("\\[Wagary \\d+d] ", "");
                         if (mem.getNickname() != null && mem.getNickname().startsWith(_nick)) continue;
                         if (nick.length() >= 32) nick = nick.substring(0, 29) + "...";
                         mem.getGuild().getController().setNickname(mem,  nick).complete();

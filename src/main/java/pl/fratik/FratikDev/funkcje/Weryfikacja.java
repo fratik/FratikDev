@@ -19,6 +19,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.awt.Color.decode;
@@ -127,6 +129,7 @@ public class Weryfikacja {
 
     @Subscribe
     public void onMessage(MessageReceivedEvent e) {
+        if (!e.getGuild().getId().equals(Config.instance.guildId)) return;
         User author = e.getAuthor();
         if (author.isBot()) return;
         WeryfikacjaInfo info = managerBazyDanych.getWeryfikacja(author);
@@ -194,9 +197,23 @@ public class Weryfikacja {
             data = new WeryfikacjaInfo(e.getUser().getId());
             data.setWeryfikacja(new Date());
             managerBazyDanych.save(data);
-            e.getChannel().sendMessage(e.getUser().getAsMention() + ", witamy w gronie zweryfikowanych! Główny kanał" +
-                    " to <#" + Config.instance.kanaly.glownyKanal + "> btw.")
-                    .complete().delete().queueAfter(5, TimeUnit.SECONDS);
+            String nowyNick = e.getUser().getName().replaceAll("[^A-Za-z0-9 ĄąĆćĘęŁłŃńÓóŚśŹźŻż./\\\\!@#$%^&*()_+\\-=\\[\\]';<>?,~`{}|\":]", "");
+            Matcher matcher = Pattern.compile("^([^A-Za-z0-9ĄąĆćĘęŁłŃńÓóŚśŹźŻż]+)").matcher(nowyNick);
+            boolean oho = matcher.find();
+            if (oho) nowyNick = nowyNick.replaceFirst(Pattern.quote(matcher.group(1)), "");
+            if (nowyNick.isEmpty()) nowyNick = "mam rakowy nick";
+            if (e.getMember().getEffectiveName().equals(nowyNick)) {
+                e.getChannel().sendMessage(e.getUser().getAsMention() + ", witamy w gronie zweryfikowanych! Główny kanał" +
+                        " to <#" + Config.instance.kanaly.glownyKanal + "> btw.")
+                        .complete().delete().queueAfter(5, TimeUnit.SECONDS);
+            } else {
+                e.getChannel().sendMessage(e.getUser().getAsMention() + ", witamy w gronie zweryfikowanych! Główny kanał" +
+                        " to <#" + Config.instance.kanaly.glownyKanal + "> btw. Twój nick zawiera niedozwolone znaki, " +
+                        "został on ustawiony na '" + nowyNick + "'. Jeżeli coś się nie podoba, zgłoś się __miło__ do " +
+                        "administratora po zmianę nicku. Nie jest to nasz obowiązek.")
+                        .complete().delete().queueAfter(5, TimeUnit.SECONDS);
+                e.getGuild().getController().setNickname(e.getMember(), nowyNick).complete();
+            }
             e.getGuild().getController()
                     .addSingleRoleToMember(member, e.getGuild().getRoleById(Config.instance.role.rolaUzytkownika)).complete();
             e.getReaction().removeReaction(e.getUser()).complete();

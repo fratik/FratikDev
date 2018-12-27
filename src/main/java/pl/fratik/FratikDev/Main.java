@@ -9,6 +9,7 @@ import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Game;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pl.fratik.FratikDev.funkcje.Komendy;
 import pl.fratik.FratikDev.funkcje.Urlopy;
 import pl.fratik.FratikDev.funkcje.Weryfikacja;
 import pl.fratik.FratikDev.manager.ManagerBazyDanych;
@@ -66,6 +67,7 @@ public class Main {
         eventBus.register(eventWaiter);
         eventBus.register(new Urlopy(managerBazyDanych, eventWaiter, jda));
         eventBus.register(new Weryfikacja(managerBazyDanych, jda));
+        eventBus.register(new Komendy());
     }
 
     public static void main(String[] args) {
