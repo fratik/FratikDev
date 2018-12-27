@@ -70,8 +70,8 @@ public class Komendy {
                 while (done.get() + errors.get() != e.getGuild().getMembers().size()) {
                     mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                             .getAsMention() + " Pracuję... " +
-                            String.format("%s/%s", String.valueOf(done.get() + errors.get()),
-                                    String.valueOf(e.getGuild().getMembers().size())))
+                            String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
+                                    String.valueOf(e.getGuild().getMembers().size()), String.valueOf(errors.get())))
                             .complete();
                     try {
                         Thread.sleep(2000);
@@ -80,8 +80,8 @@ public class Komendy {
                 }
                 mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                         .getAsMention() + " Pracuję... " +
-                        String.format("%s/%s", String.valueOf(done.get() + errors.get()),
-                                String.valueOf(e.getGuild().getMembers().size())))
+                        String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
+                                String.valueOf(e.getGuild().getMembers().size()), String.valueOf(errors.get())))
                         .complete();
                 e.getChannel().sendMessage("Gotowe!").queue();
                 break;
@@ -109,8 +109,8 @@ public class Komendy {
                 while (done.get() + errors.get() != e.getGuild().getMembers().stream().filter(m -> m.getEffectiveName().endsWith(suffix)).count()) {
                     mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                             .getAsMention() + " Pracuję... " +
-                            String.format("%s/%s", String.valueOf(done.get() + errors.get()),
-                                    String.valueOf(e.getGuild().getMembers().stream().filter(m -> m.getEffectiveName().endsWith(suffix)).count())))
+                            String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
+                                    String.valueOf(e.getGuild().getMembers().size()), String.valueOf(errors.get())))
                             .complete();
                     try {
                         Thread.sleep(2000);
@@ -119,8 +119,9 @@ public class Komendy {
                 }
                 mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                         .getAsMention() + " Pracuję... " +
-                        String.format("%s/%s", String.valueOf(done.get() + errors.get()),
-                                String.valueOf(e.getGuild().getMembers().stream().filter(m -> m.getEffectiveName().endsWith(suffix)).count())))
+                        String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
+                                String.valueOf(e.getGuild().getMembers().stream().filter(m -> m.getEffectiveName().endsWith(suffix)).count())
+                                , String.valueOf(errors.get())))
                         .complete();
                 e.getChannel().sendMessage("Gotowe!").queue();
                 break;
@@ -151,8 +152,8 @@ public class Komendy {
                 while (done.get() + errors.get() != e.getGuild().getMembers().size()) {
                     mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                             .getAsMention() + " Pracuję... " +
-                            String.format("%s/%s", String.valueOf(done.get() + errors.get()),
-                                    String.valueOf(e.getGuild().getMembers().size())))
+                            String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
+                                    String.valueOf(e.getGuild().getMembers().size()), String.valueOf(errors.get())))
                             .complete();
                     try {
                         Thread.sleep(2000);
@@ -161,8 +162,8 @@ public class Komendy {
                 }
                 mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                         .getAsMention() + " Pracuję... " +
-                        String.format("%s/%s", String.valueOf(done.get() + errors.get()),
-                                String.valueOf(e.getGuild().getMembers().size())))
+                        String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
+                                String.valueOf(e.getGuild().getMembers().size()), String.valueOf(errors.get())))
                         .complete();
                 e.getChannel().sendMessage("Gotowe!").queue();
                 break;
