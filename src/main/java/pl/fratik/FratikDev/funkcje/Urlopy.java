@@ -70,6 +70,12 @@ public class Urlopy {
                                         jda.getGuildById(Config.instance.guildId)
                                                 .getRoleById(Config.instance.role.globalAdmin)).complete();
                         User user = jda.getUserById(u.getId());
+                        Message m;
+                        try {
+                            m = jda.getTextChannelById(Config.instance.kanaly.urlopyGa).getMessageById(u.getMessageId()).complete();
+                            if (m == null) continue;
+                            m.delete().complete();
+                        } catch (Throwable ignored) {}
                         jda.getTextChannelById(Config.instance.kanaly.logiUrlopow).sendMessage(
                                 new EmbedBuilder().setAuthor(user.getName() + "#" +
                                                 user.getDiscriminator(), null,
