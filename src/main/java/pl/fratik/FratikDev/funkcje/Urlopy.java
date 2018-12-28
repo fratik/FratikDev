@@ -74,6 +74,7 @@ public class Urlopy {
                         try {
                             m = jda.getTextChannelById(Config.instance.kanaly.urlopyGa).getMessageById(u.getMessageId()).complete();
                             if (m == null) continue;
+                            ignoredDelete.add(m);
                             m.delete().complete();
                         } catch (Throwable ignored) {}
                         jda.getTextChannelById(Config.instance.kanaly.logiUrlopow).sendMessage(
