@@ -65,13 +65,13 @@ public class Urlopy {
                     if (u.getDataDo().equals(dzisiaj) && u.isValid()) {
                         u.setValid(false);
                         managerBazyDanych.save(u);
-                        jda.getGuildById(Config.instance.guildId).getController()
-                                .addSingleRoleToMember(jda.getGuildById(Config.instance.guildId).getMemberById(u.getId()),
-                                        jda.getGuildById(Config.instance.guildId)
-                                                .getRoleById(Config.instance.role.globalAdmin)).complete();
                         User user = jda.getUserById(u.getId());
                         Message m;
                         try {
+                            jda.getGuildById(Config.instance.guildId).getController()
+                                    .addSingleRoleToMember(jda.getGuildById(Config.instance.guildId).getMemberById(u.getId()),
+                                            jda.getGuildById(Config.instance.guildId)
+                                                    .getRoleById(Config.instance.role.globalAdmin)).complete();
                             m = jda.getTextChannelById(Config.instance.kanaly.urlopyGa).getMessageById(u.getMessageId()).complete();
                             if (m == null) continue;
                             ignoredDelete.add(m);
