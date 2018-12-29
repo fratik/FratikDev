@@ -98,7 +98,10 @@ public class Komendy {
                 new Thread(() -> {
                     for (Member m : e.getGuild().getMembers()) {
                         try {
-                            if (!m.getEffectiveName().endsWith(suffix)) continue;
+                            if (!m.getEffectiveName().endsWith(suffix)) {
+                                done.getAndAdd(1);
+                                continue;
+                            }
                             e.getGuild().getController().setNickname(m, m.getEffectiveName().replaceAll(suffix, "")).complete();
                             done.getAndAdd(1);
                         } catch (Throwable ignored) {
