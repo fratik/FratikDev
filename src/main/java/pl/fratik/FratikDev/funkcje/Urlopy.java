@@ -87,7 +87,7 @@ public class Urlopy {
                         ).queue();
                     }
                     Member mem = jda.getGuildById(Config.instance.guildId).getMemberById(u.getId());
-                    if (u.getDataOd().before(new Date()) && u.getDataDo().after(new Date())) {
+                    if (u.getDataOd().before(new Date()) && u.getDataDo().after(new Date()) && u.isValid()) {
                         if (mem == null) continue;
                         String _nick = "[Wagary " + (int)
                                 Math.floor((double) (dzisiaj.toInstant().toEpochMilli() - u.getDataDo()
@@ -408,7 +408,7 @@ public class Urlopy {
             ignoredDelete.add(m.getMessage());
             ignoredDelete.add(_tmp);
             _tmp.delete().queue();
-            m.getMessage().delete().queue();
+            m.getMessage().delete().complete();
             ignoredMessage.remove(user);
             callback.accept(m.getMessage().getContentRaw());
         });
