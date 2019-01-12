@@ -9,12 +9,18 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.core.events.user.update.UserUpdateAvatarEvent;
 import net.dv8tion.jda.core.events.user.update.UserUpdateNameEvent;
+import net.dv8tion.jda.core.requests.restaction.MessageAction;
+import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.Config;
 import pl.fratik.FratikDev.entity.WeryfikacjaInfo;
 import pl.fratik.FratikDev.manager.ManagerBazyDanych;
+import pl.fratik.FratikDev.util.NetworkUtil;
 
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
@@ -258,6 +264,38 @@ public class Weryfikacja {
         eb.addField("Stary nick", e.getOldName(), true);
         eb.addField("Nowy nick", e.getNewName(), true);
         e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).complete();
+    }
+
+    @Subscribe
+    public void onAvatarChange(UserUpdateAvatarEvent e) {
+        Member mem = e.getJDA().getGuildById(Config.instance.guildId).getMember(e.getUser());
+        if (mem == null) return;
+        if (!mem.getRoles().contains(e.getJDA()
+                .getGuildById(Config.instance.guildId).getRoleById(Config.instance.role.rolaUzytkownika))) return;
+        e.getJDA().getGuildById(Config.instance.guildId).getController().removeSingleRoleFromMember(mem,
+                e.getJDA().getGuildById(Config.instance.guildId).getRoleById(Config.instance.role.rolaUzytkownika)).complete();
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setColor(decode("#00ff00"));
+        eb.setAuthor("Osoba zmieniła avatar");
+        eb.setTimestamp(Instant.now());
+        eb.setDescription("Zabrano rolę " + e.getUser().getAsMention() + " za zmianę avataru.");
+        byte[] img = new byte[0];
+        try {
+            JSONObject zdjecie = NetworkUtil.getJson(Config.instance.api + "/api/polacz?zdjecie1=" +
+                    URLEncoder.encode(e.getOldAvatarUrl().replace(".webp", ".png")
+                            + "?size=2048", "UTF-8") + "&zdjecie2=" +
+                    URLEncoder.encode(e.getNewAvatarUrl().replace(".webp", ".png")
+                            + "?size=2048", "UTF-8"), Config.instance.apiKey);
+            if (zdjecie == null) throw new IOException("brak zdjecia");
+            img = NetworkUtil.getBytesFromBufferArray(zdjecie.getJSONObject("image").getJSONArray("data"));
+            eb.appendDescription("\nNa zdjęciu po lewej jest stary avatar, po prawej nowy.");
+            eb.setImage("attachment://avatary.png");
+        } catch (IOException ignored) {
+        }
+        MessageAction akcja = e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build());
+        if (img.length != 0)
+            akcja.addFile(img, "avatary.png").complete();
+        else akcja.complete();
     }
 
     private enum Typ {

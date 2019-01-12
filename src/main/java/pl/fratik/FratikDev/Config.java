@@ -11,6 +11,8 @@ public class Config {
     public Emotki emotki = new Emotki();
     public Role role = new Role();
     public Database database = new Database();
+    public String api = "";
+    public String apiKey = "";
 
     public class Kanaly {
         public String urlopyGa = "";
