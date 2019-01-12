@@ -9,6 +9,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.core.events.user.update.UserUpdateNameEvent;
 import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.Config;
 import pl.fratik.FratikDev.entity.WeryfikacjaInfo;
@@ -239,6 +240,24 @@ public class Weryfikacja {
             e.getGuild().getController().kick(member).reason("Niezatwierdzenie regulaminu").complete();
             e.getReaction().removeReaction(e.getUser()).complete();
         }
+    }
+
+    @Subscribe
+    public void onUsernameChange(UserUpdateNameEvent e) {
+        Member mem = e.getJDA().getGuildById(Config.instance.guildId).getMember(e.getUser());
+        if (mem == null) return;
+        if (!mem.getRoles().contains(e.getJDA()
+                .getGuildById(Config.instance.guildId).getRoleById(Config.instance.role.rolaUzytkownika))) return;
+        e.getJDA().getGuildById(Config.instance.guildId).getController().removeSingleRoleFromMember(mem,
+                e.getJDA().getGuildById(Config.instance.guildId).getRoleById(Config.instance.role.rolaUzytkownika)).complete();
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setColor(decode("#00ff00"));
+        eb.setAuthor("Osoba zmieniła nick");
+        eb.setTimestamp(Instant.now());
+        eb.setDescription("Zabrano rolę " + e.getUser().getAsMention() + " za zmianę nicku");
+        eb.addField("Stary nick", e.getOldName(), true);
+        eb.addField("Nowy nick", e.getNewName(), true);
+        e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).complete();
     }
 
     private enum Typ {
