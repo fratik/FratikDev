@@ -22,6 +22,7 @@ import java.io.FileReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Main {
 
@@ -60,9 +61,28 @@ public class Main {
         managerBazyDanych.load();
         EventWaiter eventWaiter = new EventWaiter(Executors.newSingleThreadScheduledExecutor(), false);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            eventWaiter.shutdown();
-            jda.shutdown();
-            managerBazyDanych.shutdown();
+            try {
+                AtomicBoolean down = new AtomicBoolean(false);
+                new Thread(() -> {
+                    eventWaiter.shutdown();
+                    jda.shutdown();
+                    managerBazyDanych.shutdown();
+                    down.getAndSet(true);
+                }).start();
+                int hits = 0;
+                while (!down.get()) {
+                    hits++;
+                    if (hits == 150) {
+                        logger.info("Czekam już 15 sekund. Wymuszam wyłączenie!");
+                        System.exit(0);
+                    }
+                    Thread.sleep(100);
+                }
+                System.exit(0);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                System.exit(0);
+            }
         }));
         eventBus.register(eventWaiter);
         eventBus.register(new Urlopy(managerBazyDanych, eventWaiter, jda));
