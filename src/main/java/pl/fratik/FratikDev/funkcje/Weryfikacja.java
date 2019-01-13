@@ -290,7 +290,7 @@ public class Weryfikacja {
             img = NetworkUtil.getBytesFromBufferArray(zdjecie.getJSONObject("image").getJSONArray("data"));
             eb.appendDescription("\nNa zdjęciu po lewej jest stary avatar, po prawej nowy.");
             eb.setImage("attachment://avatary.png");
-        } catch (IOException ignored) {
+        } catch (Exception ignored) {
         }
         MessageAction akcja = e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build());
         if (img.length != 0)

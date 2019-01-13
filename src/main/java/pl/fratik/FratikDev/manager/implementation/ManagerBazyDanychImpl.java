@@ -61,7 +61,11 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
 
     @Override
     public void usunUrlop(User user) {
-        pgStore.mapSync(Urlop.class).delete(user.getId());
+        usunUrlop(user.getId());
+    }
+
+    public void usunUrlop(String id) {
+        pgStore.mapSync(Urlop.class).delete(id);
     }
 
     @Override

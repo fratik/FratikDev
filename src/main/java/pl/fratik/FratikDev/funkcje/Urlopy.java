@@ -54,11 +54,15 @@ public class Urlopy {
                 cal.set(Calendar.MILLISECOND, 0);
                 dzisiaj = Date.from(cal.toInstant());
                 for (Urlop u : managerBazyDanych.getAllUrlopy()) {
+                    Member mem = jda.getGuildById(Config.instance.guildId).getMemberById(u.getId());
+                    if (mem == null) {
+                        managerBazyDanych.usunUrlop(u.getId());
+                        return;
+                    }
                     if (u.getDataOd().equals(dzisiaj)) {
                         if (!(u.getDataOd().toInstant().toEpochMilli() - u.getDataDo().toInstant().toEpochMilli() >= -1209600000)) {
                             jda.getGuildById(Config.instance.guildId).getController()
-                                    .removeSingleRoleFromMember(jda.getGuildById(Config.instance.guildId).getMemberById(u.getId()),
-                                            jda.getGuildById(Config.instance.guildId)
+                                    .removeSingleRoleFromMember(mem, jda.getGuildById(Config.instance.guildId)
                                                     .getRoleById(Config.instance.role.globalAdmin)).complete();
                         }
                     }
@@ -69,8 +73,7 @@ public class Urlopy {
                         Message m;
                         try {
                             jda.getGuildById(Config.instance.guildId).getController()
-                                    .addSingleRoleToMember(jda.getGuildById(Config.instance.guildId).getMemberById(u.getId()),
-                                            jda.getGuildById(Config.instance.guildId)
+                                    .addSingleRoleToMember(mem, jda.getGuildById(Config.instance.guildId)
                                                     .getRoleById(Config.instance.role.globalAdmin)).complete();
                             m = jda.getTextChannelById(Config.instance.kanaly.urlopyGa).getMessageById(u.getMessageId()).complete();
                             if (m == null) continue;
@@ -86,7 +89,6 @@ public class Urlopy {
                                         .build()
                         ).queue();
                     }
-                    Member mem = jda.getGuildById(Config.instance.guildId).getMemberById(u.getId());
                     if (u.getDataOd().before(new Date()) && u.getDataDo().after(new Date()) && u.isValid()) {
                         if (mem == null) continue;
                         String _nick = "[Wagary " + (int)
@@ -104,7 +106,7 @@ public class Urlopy {
                             mem.getGuild().getController().setNickname(mem, null).complete();
                         }
                     }
-                    if (u.getCooldownTo() != null && u.getCooldownTo().equals(dzisiaj)) {
+                    if (u.getCooldownTo() != null && u.getCooldownTo().before(new Date())) {
                         managerBazyDanych.usunUrlop(jda.getUserById(u.getId()));
                     }
                 }

@@ -23,6 +23,8 @@ public interface ManagerBazyDanych {
 
     void usunUrlop(User user);
 
+    void usunUrlop(String id);
+
     void usunWeryfikacje(User user);
 
     void save(@NotNull DatabaseEntity entity);
