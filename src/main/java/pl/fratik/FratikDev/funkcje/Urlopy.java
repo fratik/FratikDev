@@ -282,6 +282,7 @@ public class Urlopy {
             if (data == null || data.isValid()) return;
             data.setValid(true);
             data.setZatwierdzone(true);
+            managerBazyDanych.save(data);
             e.getJDA().getTextChannelById(Config.instance.kanaly.logiUrlopow).sendMessage(
                     new EmbedBuilder().setAuthor(msg.getAuthor().getName() + "#" + msg.getAuthor().getDiscriminator(),
                             null, msg.getAuthor().getEffectiveAvatarUrl().replace(".webp", ".png"))
