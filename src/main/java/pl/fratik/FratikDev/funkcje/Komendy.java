@@ -178,11 +178,10 @@ public class Komendy {
                 if (Weryfikacja.wymuszoneOdblokowanie) {
                     Weryfikacja.wymuszoneOdblokowanie = false;
                     e.getChannel().sendMessage("Pomyślnie włączono zabezpieczenia weryfikacji!").queue();
+                    return;
                 }
-                if (!Weryfikacja.wymuszoneOdblokowanie) {
-                    Weryfikacja.wymuszoneOdblokowanie = true;
-                    e.getChannel().sendMessage("Pomyślnie wyłączono zabezpieczenia weryfikacji!").queue();
-                }
+                Weryfikacja.wymuszoneOdblokowanie = true;
+                e.getChannel().sendMessage("Pomyślnie wyłączono zabezpieczenia weryfikacji!").queue();
             }
         }
     }
