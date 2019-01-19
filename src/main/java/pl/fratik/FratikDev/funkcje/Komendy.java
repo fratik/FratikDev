@@ -44,8 +44,8 @@ public class Komendy {
             case "komendy": {
                 msg.getChannel().sendMessage("FratikDev " + getClass().getPackage().getImplementationVersion() +
                         "\n\nDostępne komendy:\nhelp - To coś\nsuffix <tekst> - Dodaje tekst do nicku każdej osoby na serwerze" +
-                        "\nusunsuffix <tekst> - To samo co wyzej tylko usuwa tekst\nnaprawnicki - Poprawia rakowe nicki" +
-                        "\nwymusweryfikacje").queue();
+                        "\nusunsuffix <tekst> - To samo co wyżej, tylko usuwa tekst\nnaprawnicki - Poprawia rakowe nicki" +
+                        "\nweryfikacja - Przełącza zabezpieczenia weryfikacji").queue();
                 break;
             }
             case "suffix":
