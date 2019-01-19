@@ -44,7 +44,8 @@ public class Komendy {
             case "komendy": {
                 msg.getChannel().sendMessage("FratikDev " + getClass().getPackage().getImplementationVersion() +
                         "\n\nDostępne komendy:\nhelp - To coś\nsuffix <tekst> - Dodaje tekst do nicku każdej osoby na serwerze" +
-                        "\nusunsuffix <tekst> - To samo co wyzej tylko usuwa tekst\nnaprawnicki - Poprawia rakowe nicki").queue();
+                        "\nusunsuffix <tekst> - To samo co wyzej tylko usuwa tekst\nnaprawnicki - Poprawia rakowe nicki" +
+                        "\nwymusweryfikacje").queue();
                 break;
             }
             case "suffix":
@@ -172,6 +173,16 @@ public class Komendy {
                         .complete();
                 e.getChannel().sendMessage("Gotowe!").queue();
                 break;
+            }
+            case "weryfikacja": {
+                if (Weryfikacja.wymuszoneOdblokowanie) {
+                    Weryfikacja.wymuszoneOdblokowanie = false;
+                    e.getChannel().sendMessage("Pomyślnie włączono zabezpieczenia weryfikacji!").queue();
+                }
+                if (!Weryfikacja.wymuszoneOdblokowanie) {
+                    Weryfikacja.wymuszoneOdblokowanie = true;
+                    e.getChannel().sendMessage("Pomyślnie wyłączono zabezpieczenia weryfikacji!").queue();
+                }
             }
         }
     }

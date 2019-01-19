@@ -34,6 +34,7 @@ import static java.awt.Color.decode;
 
 public class Weryfikacja {
 
+    public static boolean wymuszoneOdblokowanie = false;
     private final ManagerBazyDanych managerBazyDanych;
     private boolean intervalLock = false;
 
@@ -185,23 +186,28 @@ public class Weryfikacja {
             cal.add(Calendar.DAY_OF_MONTH, -1);
             Date wczesniejsza1 = Date.from(cal.toInstant());
             //#endregion daty
-            if ((teraz.after(wczesniejsza) && teraz.before(pozniejsza1)) || (teraz.after(wczesniejsza1) && teraz.before(pozniejsza))) {
-                e.getChannel().sendMessage(e.getUser().getAsMention() + ", nie jest trochę za późno na " +
-                        "weryfikację? Spróbuj ponownie w normalnej porze!").complete().delete().queueAfter(5, TimeUnit.SECONDS);
-                e.getReaction().removeReaction(e.getUser()).complete();
-                return;
-            }
-            if (member.getJoinDate().toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -300000) {
-                e.getChannel().sendMessage("Ejejej, " + e.getUser().getAsMention() + "! " +
-                        "Widzę co tam robisz, nawet 5 minut nie minęło odkąd dołączyłeś/aś tutaj! " +
-                        "Nie ma szans byś w tak krótki okres czasu przeczytał(a) regulamin!").complete()
-                        .delete().queueAfter(5, TimeUnit.SECONDS);
-                e.getReaction().removeReaction(e.getUser()).complete();
-                return;
+            if (!wymuszoneOdblokowanie) {
+                if ((teraz.after(wczesniejsza) && teraz.before(pozniejsza1)) || (teraz.after(wczesniejsza1) &&
+                        teraz.before(pozniejsza))) {
+                    e.getChannel().sendMessage(e.getUser().getAsMention() + ", nie jest trochę za późno na " +
+                            "weryfikację? Spróbuj ponownie w normalnej porze!").complete().delete()
+                            .queueAfter(5, TimeUnit.SECONDS);
+                    e.getReaction().removeReaction(e.getUser()).complete();
+                    return;
+                }
+                if (member.getJoinDate().toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -300000) {
+                    e.getChannel().sendMessage("Ejejej, " + e.getUser().getAsMention() + "! " +
+                            "Widzę co tam robisz, nawet 5 minut nie minęło odkąd dołączyłeś/aś tutaj! " +
+                            "Nie ma szans byś w tak krótki okres czasu przeczytał(a) regulamin!").complete()
+                            .delete().queueAfter(5, TimeUnit.SECONDS);
+                    e.getReaction().removeReaction(e.getUser()).complete();
+                    return;
+                }
             }
             WeryfikacjaInfo data = managerBazyDanych.getWeryfikacja(e.getUser());
-            if (data != null) managerBazyDanych.usunWeryfikacje(e.getUser());
-            data = new WeryfikacjaInfo(e.getUser().getId());
+            if (data == null) {
+                data = new WeryfikacjaInfo(e.getUser().getId());
+            } else data.setIleRazy(data.getIleRazy() + 1);
             data.setWeryfikacja(new Date());
             managerBazyDanych.save(data);
             String nowyNick = e.getUser().getName().replaceAll("[^A-Za-z0-9 ĄąĆćĘęŁłŃńÓóŚśŹźŻż./\\\\!@#$%^&*()_+\\-=\\[\\]';<>?,~`{}|\":]", "");
@@ -228,10 +234,14 @@ public class Weryfikacja {
             eb.setColor(decode("#00ff00"));
             eb.setAuthor("Nowa osoba zweryfikowana");
             eb.setTimestamp(Instant.now());
-            eb.setDescription("Zweryfikowała się osoba " + e.getUser().getAsMention() + "!");
+            eb.setDescription("Zweryfikowała się osoba " + e.getUser().getAsMention() + " (" + e.getUser().getName()
+                    + "#" + e.getUser().getDiscriminator() + ", " + e.getUser().getId() + ") !");
             eb.addField("Data dołączenia na Discorda", new SimpleDateFormat("dd.MM.yyyy HH:mm:ss")
                     .format(Date.from(e.getUser().getCreationTime().toInstant())), false);
             eb.addField("Data weryfikacji", new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(data.getWeryfikacja()), false);
+            if (wymuszoneOdblokowanie) eb.addField("Odblokowanie zostalo wymuszone", "Osoba nie powinna być wpuszczona!", false);
+            if (data.getIleRazy() == 1) eb.addField("Ilość weryfikacji", "Jest to pierwsza weryfikacja tego użytkownika.", false);
+            else eb.addField("Ilość weryfikacji", "Jest to " + data.getIleRazy() + " weryfikacja tego użytkownika.", false);
             e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
         }
         if (emote.getId().equals(Config.instance.emotki.redTick)) {

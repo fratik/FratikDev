@@ -17,6 +17,7 @@ public class WeryfikacjaInfo implements DatabaseEntity {
     private String id;
     private Date weryfikacja;
     private Date ostatniaWiadomosc;
+    private int ileRazy = 1;
 
     public WeryfikacjaInfo() {}
 
