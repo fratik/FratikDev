@@ -210,7 +210,10 @@ public class Weryfikacja {
             WeryfikacjaInfo data = managerBazyDanych.getWeryfikacja(e.getUser());
             if (data == null) {
                 data = new WeryfikacjaInfo(e.getUser().getId());
-            } else data.setIleRazy(data.getIleRazy() + 1);
+            } else {
+                data.setIleRazy(data.getIleRazy() + 1);
+                data.setOstatniaWiadomosc(null);
+            }
             data.setWeryfikacja(new Date());
             managerBazyDanych.save(data);
             String nowyNick = e.getUser().getName().replaceAll("[^A-Za-z0-9 ĄąĆćĘęŁłŃńÓóŚśŹźŻż./\\\\!@#$%^&*()_+\\-=\\[\\]';<>?,~`{}|\":]", "");
