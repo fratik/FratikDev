@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,7 +47,8 @@ public class Weryfikacja {
         zRegMes = jda.getTextChannelById(Config.instance.kanaly.zatwierdzRegulamin).getMessageById(Config.instance.wiadomosci.zatwierdzRegulaminWiadomosc).complete();
         zRegMes.addReaction(jda.getEmoteById(Config.instance.emotki.greenTick)).complete();
         zRegMes.addReaction(jda.getEmoteById(Config.instance.emotki.redTick)).complete();
-        Executors.newScheduledThreadPool(2).scheduleWithFixedDelay(() -> {
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
+        executorService.scheduleWithFixedDelay(() -> {
             if (intervalLock) return;
             intervalLock = true;
             try {
@@ -133,6 +135,7 @@ public class Weryfikacja {
                 intervalLock = false;
             }
         }, 60, 60, TimeUnit.SECONDS);
+        Runtime.getRuntime().addShutdownHook(new Thread(executorService::shutdownNow));
     }
 
     @Subscribe

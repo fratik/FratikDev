@@ -25,6 +25,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -41,7 +42,8 @@ public class Urlopy {
     public Urlopy(ManagerBazyDanych managerBazyDanych, EventWaiter eventWaiter, JDA jda) {
         this.managerBazyDanych = managerBazyDanych;
         this.eventWaiter = eventWaiter;
-        Executors.newScheduledThreadPool(2).scheduleWithFixedDelay(() -> {
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
+        executorService.scheduleWithFixedDelay(() -> {
             try {
                 if (intervalLock) return;
                 intervalLock = true;
@@ -116,6 +118,7 @@ public class Urlopy {
                 intervalLock = false;
             }
         }, 60, 60, TimeUnit.SECONDS);
+        Runtime.getRuntime().addShutdownHook(new Thread(executorService::shutdownNow));
     }
 
     @Subscribe

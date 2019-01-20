@@ -22,7 +22,6 @@ import java.io.FileReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Main {
 
@@ -60,34 +59,21 @@ public class Main {
         ManagerBazyDanych managerBazyDanych = new ManagerBazyDanychImpl();
         managerBazyDanych.load();
         EventWaiter eventWaiter = new EventWaiter(Executors.newSingleThreadScheduledExecutor(), false);
+        Urlopy urlopy = new Urlopy(managerBazyDanych, eventWaiter, jda);
+        Weryfikacja weryfikacja = new Weryfikacja(managerBazyDanych, jda);
+        Komendy komendy = new Komendy();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                AtomicBoolean down = new AtomicBoolean(false);
-                new Thread(() -> {
-                    eventWaiter.shutdown();
-                    jda.shutdown();
-                    managerBazyDanych.shutdown();
-                    down.getAndSet(true);
-                }).start();
-                int hits = 0;
-                while (!down.get()) {
-                    hits++;
-                    if (hits == 150) {
-                        logger.info("Czekam już 15 sekund. Wymuszam wyłączenie!");
-                        System.exit(0);
-                    }
-                    Thread.sleep(100);
-                }
-                System.exit(0);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                System.exit(0);
-            }
+            eventWaiter.shutdown();
+            eventBus.unregister(urlopy);
+            eventBus.unregister(weryfikacja);
+            eventBus.unregister(komendy);
+            managerBazyDanych.shutdown();
+            jda.shutdownNow();
         }));
         eventBus.register(eventWaiter);
-        eventBus.register(new Urlopy(managerBazyDanych, eventWaiter, jda));
-        eventBus.register(new Weryfikacja(managerBazyDanych, jda));
-        eventBus.register(new Komendy());
+        eventBus.register(urlopy);
+        eventBus.register(weryfikacja);
+        eventBus.register(komendy);
     }
 
     public static void main(String[] args) {
