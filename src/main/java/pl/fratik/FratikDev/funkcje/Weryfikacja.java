@@ -206,6 +206,14 @@ public class Weryfikacja {
                     e.getReaction().removeReaction(e.getUser()).complete();
                     return;
                 }
+                if (member.getJoinDate().toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -604800000) {
+                    e.getChannel().sendMessage("Przykro mi " + e.getUser().getAsMention() + ", " +
+                            "ale Twoje konto na Discord musi mieć co najmniej tydzień. Spróbuj ponownie " +
+                            "za kilka dni!").complete() //TODO licznik dni, robię to przez gitlaba lol
+                            .delete().queueAfter(5, TimeUnit.SECONDS);
+                    e.getReaction().removeReaction(e.getUser()).complete();
+                    return;
+                }
             }
             WeryfikacjaInfo data = managerBazyDanych.getWeryfikacja(e.getUser());
             if (data == null) {
@@ -228,7 +236,7 @@ public class Weryfikacja {
             } else {
                 e.getChannel().sendMessage(e.getUser().getAsMention() + ", witamy w gronie zweryfikowanych! Główny kanał" +
                         " to <#" + Config.instance.kanaly.glownyKanal + "> btw. Twój nick zawiera niedozwolone znaki, " +
-                        "został on ustawiony na '" + nowyNick + "'. Jeżeli coś się nie podoba, zgłoś się __miło__ do " +
+                        "został on ustawiony na '" + nowyNick + "'. Jeżeli coś się nie podoba, zgłoś się __miło__ do " +
                         "administratora po zmianę nicku. Nie jest to nasz obowiązek.")
                         .complete().delete().queueAfter(5, TimeUnit.SECONDS);
                 e.getGuild().getController().setNickname(e.getMember(), nowyNick).complete();
