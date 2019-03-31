@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -198,11 +200,16 @@ public class Weryfikacja {
                     e.getReaction().removeReaction(e.getUser()).complete();
                     return;
                 }
-                if (member.getUser().getCreationTime().toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -604800000) {
+                OffsetDateTime dataUz = member.getUser().getCreationTime();
+                if (dataUz.toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -604800000) {
+                    Calendar inst = Calendar.getInstance();
+                    inst.setTime(new Date(dataUz.toInstant().toEpochMilli()));
+                    inst.add(Calendar.WEEK_OF_MONTH, 1);
+                    String exp = "za " + Math.abs(ChronoUnit.DAYS.between(inst.getTime().toInstant(), Instant.now()))
+                            + " dni!";
                     e.getChannel().sendMessage("Przykro mi " + e.getUser().getAsMention() + ", " +
-                            "ale Twoje konto na Discord musi mieć co najmniej tydzień. Spróbuj ponownie " +
-                            "za kilka dni!").complete() //TODO ten licznik dni, nie zapomnialem
-                            .delete().queueAfter(5, TimeUnit.SECONDS);
+                            "ale Twoje konto na Discord musi mieć co najmniej tydzień. Spróbuj ponownie " + exp)
+                            .complete().delete().queueAfter(5, TimeUnit.SECONDS);
                     e.getReaction().removeReaction(e.getUser()).complete();
                     return;
                 }
