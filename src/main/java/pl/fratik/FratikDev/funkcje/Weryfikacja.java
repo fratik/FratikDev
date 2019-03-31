@@ -198,18 +198,18 @@ public class Weryfikacja {
                     e.getReaction().removeReaction(e.getUser()).complete();
                     return;
                 }
-                if (member.getJoinDate().toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -300000) {
-                    e.getChannel().sendMessage("Ejejej, " + e.getUser().getAsMention() + "! " +
-                            "Widzę co tam robisz, nawet 5 minut nie minęło odkąd dołączyłeś/aś tutaj! " +
-                            "Nie ma szans byś w tak krótki okres czasu przeczytał(a) regulamin!").complete()
+                if (member.getUser().getCreationTime().toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -604800000) {
+                    e.getChannel().sendMessage("Przykro mi " + e.getUser().getAsMention() + ", " +
+                            "ale Twoje konto na Discord musi mieć co najmniej tydzień. Spróbuj ponownie " +
+                            "za kilka dni!").complete() //TODO ten licznik dni, nie zapomnialem
                             .delete().queueAfter(5, TimeUnit.SECONDS);
                     e.getReaction().removeReaction(e.getUser()).complete();
                     return;
                 }
-                if (member.getJoinDate().toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -604800000) {
-                    e.getChannel().sendMessage("Przykro mi " + e.getUser().getAsMention() + ", " +
-                            "ale Twoje konto na Discord musi mieć co najmniej tydzień. Spróbuj ponownie " +
-                            "za kilka dni!").complete() //TODO licznik dni, robię to przez gitlaba lol
+                if (member.getJoinDate().toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -300000) {
+                    e.getChannel().sendMessage("Ejejej, " + e.getUser().getAsMention() + "! " +
+                            "Widzę co tam robisz, nawet 5 minut nie minęło odkąd dołączyłeś/aś tutaj! " +
+                            "Nie ma szans byś w tak krótki okres czasu przeczytał(a) regulamin!").complete()
                             .delete().queueAfter(5, TimeUnit.SECONDS);
                     e.getReaction().removeReaction(e.getUser()).complete();
                     return;
