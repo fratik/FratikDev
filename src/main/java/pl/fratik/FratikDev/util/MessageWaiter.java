@@ -24,7 +24,7 @@ public class MessageWaiter {
 
     public void create() {
         eventWaiter.waitForEvent(MessageReceivedEvent.class, this::checkMessage,
-                this::handleMessage, 30, TimeUnit.SECONDS, this::onTimeout);
+                this::handleMessage, 300, TimeUnit.SECONDS, this::onTimeout);
     }
 
     private boolean checkMessage(MessageReceivedEvent event) {

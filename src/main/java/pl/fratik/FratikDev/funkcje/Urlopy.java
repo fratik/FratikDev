@@ -414,7 +414,7 @@ public class Urlopy {
             ignoredDelete.add(m.getMessage());
             ignoredDelete.add(_tmp);
             _tmp.delete().queue();
-            m.getMessage().delete().complete();
+            m.getMessage().delete().queue();
             ignoredMessage.remove(user);
             callback.accept(m.getMessage().getContentRaw());
         });
