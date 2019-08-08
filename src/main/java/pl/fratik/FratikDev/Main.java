@@ -1,5 +1,6 @@
 package pl.fratik.FratikDev;
 
+import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -30,7 +31,7 @@ public class Main {
     private Main(String token) throws InterruptedException, LoginException {
         Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
         Config config = new Config();
-        EventBus eventBus = new EventBus("glowny");
+        AsyncEventBus eventBus = new AsyncEventBus(Executors.newFixedThreadPool(4));
         File cfg = new File("config.json");
         if (!cfg.exists()) {
             try {

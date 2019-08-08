@@ -1,5 +1,6 @@
 package pl.fratik.FratikDev.funkcje;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
@@ -122,6 +123,7 @@ public class Urlopy {
     }
 
     @Subscribe
+    @AllowConcurrentEvents
     public void onMessage(MessageReceivedEvent event) {
         if (!event.getMessage().getChannel().getId().equals(Config.instance.kanaly.urlopyGa)) return;
         if (event.getAuthor().getId().equals(event.getJDA().getSelfUser().getId())) return;
@@ -260,6 +262,7 @@ public class Urlopy {
     }
 
     @Subscribe
+    @AllowConcurrentEvents
     public void onMessageReactionAdd(MessageReactionAddEvent e) {
         if (!(e.getReactionEmote().isEmote() &&
                 (e.getReactionEmote().getEmote().getId().equals(Config.instance.emotki.greenTick) ||
@@ -339,6 +342,7 @@ public class Urlopy {
     }
 
     @Subscribe
+    @AllowConcurrentEvents
     public void onMessageEdit(MessageUpdateEvent e) {
         if (!e.getChannel().getId().equals(Config.instance.kanaly.urlopyGa)) return;
         e.getChannel().sendMessage(e.getAuthor().getAsMention() + ": Nie można edytować urlopów! Usuwam Twój urlop!")
@@ -361,6 +365,7 @@ public class Urlopy {
     }
 
     @Subscribe
+    @AllowConcurrentEvents
     public void onMessageDelete(MessageDeleteEvent e) {
         if (!e.getChannel().getId().equals(Config.instance.kanaly.urlopyGa)) return;
         if (ignoredDelete.stream().map(ISnowflake::getId).anyMatch(a -> a.equals(e.getMessageId()))) {
@@ -380,7 +385,8 @@ public class Urlopy {
             String powod = _powod;
             if (powod == null) powod = "brak powodu";
             if (powod.length() >= 1000) {
-                e.getChannel().sendMessage("Powód jest powyżej 1k znaków. Używam \"brak powodu\".").complete().delete().queueAfter(5, TimeUnit.SECONDS);
+                e.getChannel().sendMessage("Powód jest powyżej 1k znaków. Używam \"brak powodu\".")
+                        .queue(w -> w.delete().queueAfter(5, TimeUnit.SECONDS));
                 powod = "brak powodu";
             }
             finalData.setValid(false);
@@ -396,7 +402,7 @@ public class Urlopy {
             ).queue();
             e.getGuild().getController()
                     .addSingleRoleToMember(e.getGuild().getMemberById(finalData.getId()),
-                            e.getGuild().getRoleById(Config.instance.role.globalAdmin)).complete();
+                            e.getGuild().getRoleById(Config.instance.role.globalAdmin)).queue();
         });
     }
 

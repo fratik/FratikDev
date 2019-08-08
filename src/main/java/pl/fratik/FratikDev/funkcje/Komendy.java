@@ -1,5 +1,6 @@
 package pl.fratik.FratikDev.funkcje;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import net.dv8tion.jda.core.entities.ISnowflake;
 import net.dv8tion.jda.core.entities.Member;
@@ -16,6 +17,7 @@ import java.util.regex.Pattern;
 
 public class Komendy {
     @Subscribe
+    @AllowConcurrentEvents
     public void onMessage(MessageReceivedEvent e) {
         if (e.getAuthor().isBot()) return;
         Message msg = e.getMessage();

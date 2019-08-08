@@ -1,5 +1,6 @@
 package pl.fratik.FratikDev.funkcje;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
@@ -141,6 +142,7 @@ public class Weryfikacja {
     }
 
     @Subscribe
+    @AllowConcurrentEvents
     public void onMessage(MessageReceivedEvent e) {
         if (!e.getGuild().getId().equals(Config.instance.guildId)) return;
         User author = e.getAuthor();
@@ -153,6 +155,7 @@ public class Weryfikacja {
     }
 
     @Subscribe
+    @AllowConcurrentEvents
     public void onMessageReactionAdd(MessageReactionAddEvent e) {
         if (!e.getReactionEmote().isEmote() || !e.getChannel().getId().equals(Config.instance.kanaly.zatwierdzRegulamin)) return;
         if (e.getUser().equals(e.getJDA().getSelfUser())) return;
