@@ -80,7 +80,7 @@ versioning {
      * expression is required. The first one will be used to reverse order
      * the tags in Git.
      */
-    lastTagPattern = /(\d+)$/
+    lastTagPattern = /v(\d+).(\d+).(\d+)$/
 }
 
 version versioning.info.full
