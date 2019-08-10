@@ -60,27 +60,36 @@ public class Main {
         ManagerBazyDanych managerBazyDanych = new ManagerBazyDanychImpl();
         managerBazyDanych.load();
         EventWaiter eventWaiter = new EventWaiter(Executors.newSingleThreadScheduledExecutor(), false);
-        Urlopy urlopy = new Urlopy(managerBazyDanych, eventWaiter, jda);
-        Weryfikacja weryfikacja = new Weryfikacja(managerBazyDanych, jda);
-        Komendy komendy = new Komendy();
+        Urlopy urlopy;
+        if (Config.instance.funkcje.urlopy) urlopy = new Urlopy(managerBazyDanych, eventWaiter, jda);
+        else urlopy = null;
+        Weryfikacja weryfikacja;
+        if (Config.instance.funkcje.weryfikacja.wlaczone) weryfikacja = new Weryfikacja(managerBazyDanych, jda);
+        else weryfikacja = null;
+        Komendy komendy;
+        if (Config.instance.funkcje.komendy.wlaczone) komendy = new Komendy();
+        else komendy = null;
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             eventWaiter.shutdown();
-            eventBus.unregister(urlopy);
-            eventBus.unregister(weryfikacja);
-            eventBus.unregister(komendy);
+            if (urlopy != null) eventBus.unregister(urlopy);
+            if (weryfikacja != null) eventBus.unregister(weryfikacja);
+            if (komendy != null) eventBus.unregister(komendy);
             managerBazyDanych.shutdown();
             jda.shutdownNow();
         }));
         eventBus.register(eventWaiter);
-        eventBus.register(urlopy);
-        eventBus.register(weryfikacja);
-        eventBus.register(komendy);
+        if (urlopy != null) eventBus.register(urlopy);
+        if (weryfikacja != null) eventBus.register(weryfikacja);
+        if (komendy != null) eventBus.register(komendy);
     }
 
     public static void main(String[] args) {
         try {
             logger.info("Ładowanie...");
-            if (args.length == 0) logger.error("Nie podano tokenu!");
+            if (args.length == 0) {
+                logger.error("Nie podano tokenu!");
+                return;
+            }
             new Main(args[0]);
         } catch (Exception e) {
             logger.error("Wystąpił błąd!", e);

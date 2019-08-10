@@ -41,7 +41,6 @@ public class Komendy {
             case "help":
             case "hlep":
             case "pomusz":
-            case "marcopomocy": // Ola jeżeli to czytasz to wiedz, że musiałem zrobić ten żart XD
             case "pomoc":
             case "komendy": {
                 msg.getChannel().sendMessage("FratikDev " + getClass().getPackage().getImplementationVersion() +
@@ -52,9 +51,14 @@ public class Komendy {
             }
             case "suffix":
             case "ponicku": {
+                if (!Config.instance.funkcje.komendy.suffix) {
+                    msg.getChannel().sendMessage("Funkcja została wyłączona w konfiguracji bota.").queue();
+                    return;
+                }
                 String suffix = " " + String.join(" ", args);
                 if (suffix.isEmpty()) {
                     e.getChannel().sendMessage("Suffix nie może być pusty!").queue();
+                    return;
                 }
                 Message mes = e.getChannel().sendMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                         .getAsMention() + " Pracuję...").complete();
@@ -69,7 +73,7 @@ public class Komendy {
                             }
                             e.getGuild().getController().setNickname(m, m.getEffectiveName() + suffix).complete();
                             done.getAndAdd(1);
-                        } catch (Throwable ignored) {
+                        } catch (Exception ignored) {
                             errors.getAndAdd(1);
                         }
                     }
@@ -82,7 +86,8 @@ public class Komendy {
                             .complete();
                     try {
                         Thread.sleep(2000);
-                    } catch (InterruptedException ignored) {
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
                     }
                 }
                 mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
@@ -94,9 +99,14 @@ public class Komendy {
                 break;
             }
             case "usunsuffix": {
+                if (!Config.instance.funkcje.komendy.suffix) {
+                    msg.getChannel().sendMessage("Funkcja została wyłączona w konfiguracji bota.").queue();
+                    return;
+                }
                 String suffix = " " + String.join(" ", args);
                 if (suffix.isEmpty()) {
                     e.getChannel().sendMessage("Suffix nie może być pusty!").queue();
+                    return;
                 }
                 Message mes = e.getChannel().sendMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                         .getAsMention() + " Pracuję...").complete();
@@ -108,7 +118,7 @@ public class Komendy {
                             if (!m.getEffectiveName().endsWith(suffix)) continue;
                             e.getGuild().getController().setNickname(m, m.getEffectiveName().replaceAll(suffix, "")).complete();
                             done.getAndAdd(1);
-                        } catch (Throwable ignored) {
+                        } catch (Exception ignored) {
                             errors.getAndAdd(1);
                         }
                     }
@@ -122,6 +132,7 @@ public class Komendy {
                     try {
                         Thread.sleep(2000);
                     } catch (InterruptedException ignored) {
+                        Thread.currentThread().interrupt();
                     }
                 }
                 mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
@@ -134,6 +145,10 @@ public class Komendy {
                 break;
             }
             case "naprawnicki": {
+                if (!Config.instance.funkcje.komendy.naprawnicki) {
+                    msg.getChannel().sendMessage("Funkcja została wyłączona w konfiguracji bota.").queue();
+                    return;
+                }
                 Message mes = e.getChannel().sendMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                         .getAsMention() + " Pracuję...").complete();
                 AtomicInteger done = new AtomicInteger();
@@ -152,7 +167,7 @@ public class Komendy {
                             }
                             e.getGuild().getController().setNickname(m, nowyNick).complete();
                             done.getAndAdd(1);
-                        } catch (Throwable ignored) {
+                        } catch (Exception ignored) {
                             errors.getAndAdd(1);
                         }
                     }
@@ -166,6 +181,7 @@ public class Komendy {
                     try {
                         Thread.sleep(2000);
                     } catch (InterruptedException ignored) {
+                        Thread.currentThread().interrupt();
                     }
                 }
                 mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
@@ -177,6 +193,10 @@ public class Komendy {
                 break;
             }
             case "weryfikacja": {
+                if (!Config.instance.funkcje.komendy.weryfikacja) {
+                    msg.getChannel().sendMessage("Funkcja została wyłączona w konfiguracji bota.").queue();
+                    return;
+                }
                 if (Weryfikacja.wymuszoneOdblokowanie) {
                     Weryfikacja.wymuszoneOdblokowanie = false;
                     e.getChannel().sendMessage("Pomyślnie włączono zabezpieczenia weryfikacji!").queue();

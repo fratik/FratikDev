@@ -1,0 +1,56 @@
+/*
+ * NIE UŻYWAJ TEGO CONFIGU!
+ * On jest tylko do celów poglądowych i ze względu na komentarze, działać nie będzie.
+ * Użyj go jako referencję do wpisywania poprawnego config.json, wygenerowanego przez bota przy pierwszym starcie.
+ */
+{
+  "blokadaOd": "<godzina od kiedy bot ma blokowac weryfikacje, od 0 do 23>",
+  "blokadaDo": "<godzina od kiedy (nastepnego dnia) bot ma otwierac weryfikacje, od 0 do 23",
+  "guildId": "<id serwera>",
+  "kanaly": {
+    "urlopyGa": "<id kanalu gdzie pisze sie urlopy>",
+    "zatwierdzRegulamin": "<id kanalu gdzie trzeba dawac reakcje by wejsc>",
+    "logiUrlopow": "<id kanalu z logami urlopow, uzywane w urlopach oczywiscie>",
+    "glownyKanal": "<id kanalu gdzie ludzie normalnie pisza>",
+    "logiWeryfikacji": "<id kanalu gdzie bot zdaje relacje z weryfikacji>"
+  },
+  "wiadomosci": {
+    "zatwierdzRegulaminWiadomosc": "<id wiadomosci informujacej o koniecznosci zaakceptowania regulaminu, na kanale do tego sluzacym>"
+  },
+  "emotki": {
+    "greenTick": "<id emotki greentick>",
+    "redTick": "<id emotki redtick>",
+    "loading": "<id emotki ladowania>"
+  },
+  "role": {
+    "globalAdmin": "<id roli ga, uzywane w urlopach>",
+    "admin": "<id tego kto ma permy do uzywania komend bota, aka adminow>",
+    "zarzadzajacyGa": "<id roli zga, uzywane w urlopach>",
+    "rolaUzytkownika": "<id roli Zweryfikowanego>"
+  },
+  "database": {
+    "jdbcUrl": "jdbc:postgresql://<host>/<nazwadb>",
+    "user": "<userdb>",
+    "password": "<haslodb>"
+  },
+  "api": "https://api.fratikbot.pl",
+  "apiKey": "<haslo, ale jego brak nie powinien zrobic ze bot nie dziala>",
+  "funkcje": {
+    "komendy": {
+      "wlaczone": true, // czy włączyć funkcję komend (true/false)
+      "suffix": true, // czy włączyć komendę suffix i usunsuffix (true/false)
+      "naprawnicki": true, // czy włączyć komendę naprawnicki (true/false)
+      "weryfikacja": true // czy włączyć komendę weryfikacja (true/false)
+    },
+    "urlopy": true, // czy włączyć funkcję urlopów (true/false)
+    "weryfikacja": {
+      "wlaczone": true, // czy włączyć funkcję weryfikacji (true/false)
+      "zabierzRole": true, // czy zabierać rolę po 3d niaktywności (true/false)
+      "restrykcje": true, // czy włączyć restrykcje (true/false)
+      "naprawNick": true, // czy naprawiać nicki na weryfikacji (true/false)
+      "domyslnyNick": "<nick który bot ma ustawiać jeżeli nick zawiera tylko nieprawidłowe znaki>",
+      "logi": true, // czy używać logów weryfikacji (true/false)
+      "zabierzRolePrzyZmianieAvataru": true // czy zabierać weryfikację przy zmianie awataru (true/false)
+    }
+  }
+}
