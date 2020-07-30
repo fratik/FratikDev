@@ -100,13 +100,21 @@ public class Urlopy {
                         String nick = _nick + mem.getEffectiveName().replaceAll("\\[Wagary \\d+d] ", "");
                         if (mem.getNickname() != null && mem.getNickname().startsWith(_nick)) continue;
                         if (nick.length() >= 32) nick = nick.substring(0, 29) + "...";
-                        mem.getGuild().getController().setNickname(mem,  nick).complete();
+                        try {
+                            mem.getGuild().getController().setNickname(mem, nick).complete();
+                        } catch (Exception e) {
+                            LoggerFactory.getLogger(Urlopy.class).error("nie udało się zmienić nicku dla " + mem, e);
+                        }
                     } else {
                         if (mem == null) continue;
                         String effName = mem.getNickname();
                         if (effName == null) effName = "";
                         if (effName.startsWith("[Wagary")) {
-                            mem.getGuild().getController().setNickname(mem, null).complete();
+                            try {
+                                mem.getGuild().getController().setNickname(mem, null).complete();
+                            } catch (Exception e) {
+                                LoggerFactory.getLogger(Urlopy.class).error("nie udało się zmienić nicku dla " + mem, e);
+                            }
                         }
                     }
                     if (u.getCooldownTo() != null && u.getCooldownTo().before(new Date())) {
