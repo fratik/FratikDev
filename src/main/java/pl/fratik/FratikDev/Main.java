@@ -1,13 +1,15 @@
 package pl.fratik.FratikDev;
 
 import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.OnlineStatus;
-import net.dv8tion.jda.core.entities.Game;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.funkcje.Komendy;
@@ -54,8 +56,12 @@ public class Main {
             System.exit(1);
         }
         Config.instance = config;
-        JDA jda = new JDABuilder(token).addEventListener(new JDAEventHandler(eventBus)).setEnableShutdownHook(false)
-                .setStatus(OnlineStatus.ONLINE).setGame(Game.watching("FratikDev")).build();
+        JDA jda = JDABuilder.createDefault(token)
+                .setChunkingFilter(ChunkingFilter.ALL)
+                .setMemberCachePolicy(MemberCachePolicy.ALL)
+                .enableIntents(GatewayIntent.GUILD_MEMBERS)
+                .addEventListeners(new JDAEventHandler(eventBus)).setEnableShutdownHook(false)
+                .setStatus(OnlineStatus.ONLINE).setActivity(Activity.watching("FratikDev")).build();
         jda.awaitReady();
         ManagerBazyDanych managerBazyDanych = new ManagerBazyDanychImpl();
         managerBazyDanych.load();

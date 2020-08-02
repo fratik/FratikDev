@@ -2,18 +2,18 @@ package pl.fratik.FratikDev.funkcje;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.Emote;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.core.events.user.update.UserUpdateAvatarEvent;
-import net.dv8tion.jda.core.events.user.update.UserUpdateNameEvent;
-import net.dv8tion.jda.core.requests.restaction.MessageAction;
-import org.json.JSONObject;
+import com.google.gson.JsonObject;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Emote;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.events.user.update.UserUpdateAvatarEvent;
+import net.dv8tion.jda.api.events.user.update.UserUpdateNameEvent;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.Config;
 import pl.fratik.FratikDev.entity.WeryfikacjaInfo;
@@ -44,14 +44,14 @@ public class Weryfikacja {
 
     public Weryfikacja(ManagerBazyDanych managerBazyDanych, JDA jda) {
         this.managerBazyDanych = managerBazyDanych;
-        Message zRegMes = jda.getTextChannelById(Config.instance.kanaly.zatwierdzRegulamin).getMessageById(Config.instance.wiadomosci.zatwierdzRegulaminWiadomosc).complete();
+        Message zRegMes = jda.getTextChannelById(Config.instance.kanaly.zatwierdzRegulamin).retrieveMessageById(Config.instance.wiadomosci.zatwierdzRegulaminWiadomosc).complete();
         if (zRegMes == null) throw new IllegalStateException("Brak pierwszej wiadomosci");
         try {
             zRegMes.clearReactions().complete();
         } catch (Exception ignored) {
             throw new IllegalStateException("Bot nie ma uprawnień na kanale weryfikacyjnym!");
         }
-        zRegMes = jda.getTextChannelById(Config.instance.kanaly.zatwierdzRegulamin).getMessageById(Config.instance.wiadomosci.zatwierdzRegulaminWiadomosc).complete();
+        zRegMes = jda.getTextChannelById(Config.instance.kanaly.zatwierdzRegulamin).retrieveMessageById(Config.instance.wiadomosci.zatwierdzRegulaminWiadomosc).complete();
         zRegMes.addReaction(jda.getEmoteById(Config.instance.emotki.greenTick)).complete();
         zRegMes.addReaction(jda.getEmoteById(Config.instance.emotki.redTick)).complete();
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
@@ -74,7 +74,7 @@ public class Weryfikacja {
                         .collect(Collectors.toList())) {
                     WeryfikacjaInfo weryfikacjaInfo = managerBazyDanych.getWeryfikacja(mem.getUser());
                     if (weryfikacjaInfo == null) {
-                        mem.getGuild().getController().removeSingleRoleFromMember(mem,
+                        mem.getGuild().removeRoleFromMember(mem,
                                 jda.getRoleById(Config.instance.role.rolaUzytkownika)).complete();
                         zabrano.put(mem, Typ.BRAKDANYCH);
                         continue;
@@ -91,7 +91,7 @@ public class Weryfikacja {
                     cal2.add(Calendar.DAY_OF_MONTH, 3);
                     Date koniec = Date.from(cal2.toInstant());
                     if (!dzisiaj.equals(koniec)) continue;
-                    mem.getGuild().getController().removeSingleRoleFromMember(mem,
+                    mem.getGuild().removeRoleFromMember(mem,
                         jda.getRoleById(Config.instance.role.rolaUzytkownika)).complete();
                     zabrano.put(mem, Typ.CZAS);
                 }
@@ -155,7 +155,7 @@ public class Weryfikacja {
         WeryfikacjaInfo info = managerBazyDanych.getWeryfikacja(author);
         if (info == null) info = new WeryfikacjaInfo(author.getId());
         if (info.getWeryfikacja() == null) return;
-        info.setOstatniaWiadomosc(Date.from(e.getMessage().getCreationTime().toInstant()));
+        info.setOstatniaWiadomosc(Date.from(e.getMessage().getTimeCreated().toInstant()));
         managerBazyDanych.save(info);
     }
 
@@ -164,7 +164,7 @@ public class Weryfikacja {
     public void onMessageReactionAdd(MessageReactionAddEvent e) {
         if (!e.getReactionEmote().isEmote() || !e.getChannel().getId().equals(Config.instance.kanaly.zatwierdzRegulamin)) return;
         if (e.getUser().equals(e.getJDA().getSelfUser())) return;
-        Message m = e.getChannel().getMessageById(e.getMessageId()).complete();
+        Message m = e.getChannel().retrieveMessageById(e.getMessageId()).complete();
         if (!m.getId().equals(Config.instance.wiadomosci.zatwierdzRegulaminWiadomosc)) return;
         Emote emote = e.getReactionEmote().getEmote();
         Member member = e.getMember();
@@ -208,7 +208,7 @@ public class Weryfikacja {
                     e.getReaction().removeReaction(e.getUser()).complete();
                     return;
                 }
-                OffsetDateTime dataUz = member.getUser().getCreationTime();
+                OffsetDateTime dataUz = member.getUser().getTimeCreated();
                 if (dataUz.toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -604800000) {
                     Calendar inst = Calendar.getInstance();
                     inst.setTime(new Date(dataUz.toInstant().toEpochMilli()));
@@ -221,7 +221,7 @@ public class Weryfikacja {
                     e.getReaction().removeReaction(e.getUser()).complete();
                     return;
                 }
-                if (member.getJoinDate().toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -300000) {
+                if (member.getTimeJoined().toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -300000) {
                     e.getChannel().sendMessage("Ejejej, " + e.getUser().getAsMention() + "! " +
                             "Widzę co tam robisz, nawet 5 minut nie minęło odkąd dołączyłeś/aś tutaj! " +
                             "Nie ma szans byś w tak krótki okres czasu przeczytał(a) regulamin!").complete()
@@ -257,10 +257,9 @@ public class Weryfikacja {
                         "został on ustawiony na '" + nowyNick + "'. Jeżeli coś się nie podoba, zgłoś się __miło__ do " +
                         "administratora po zmianę nicku. Nie jest to nasz obowiązek.")
                         .complete().delete().queueAfter(5, TimeUnit.SECONDS);
-                e.getGuild().getController().setNickname(e.getMember(), nowyNick).complete();
+                e.getGuild().modifyNickname(e.getMember(), nowyNick).complete();
             }
-            e.getGuild().getController()
-                    .addSingleRoleToMember(member, e.getGuild().getRoleById(Config.instance.role.rolaUzytkownika)).complete();
+            e.getGuild().addRoleToMember(member, e.getGuild().getRoleById(Config.instance.role.rolaUzytkownika)).complete();
             e.getReaction().removeReaction(e.getUser()).complete();
             if (!Config.instance.funkcje.weryfikacja.logi) return;
             EmbedBuilder eb = new EmbedBuilder();
@@ -270,7 +269,7 @@ public class Weryfikacja {
             eb.setDescription("Zweryfikowała się osoba " + e.getUser().getAsMention() + " (" + e.getUser().getName()
                     + "#" + e.getUser().getDiscriminator() + ", " + e.getUser().getId() + ") !");
             eb.addField("Data dołączenia na Discorda", new SimpleDateFormat("dd.MM.yyyy HH:mm:ss")
-                    .format(Date.from(e.getUser().getCreationTime().toInstant())), false);
+                    .format(Date.from(e.getUser().getTimeCreated().toInstant())), false);
             eb.addField("Data weryfikacji", new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(data.getWeryfikacja()), false);
             if (wymuszoneOdblokowanie) eb.addField("Odblokowanie zostalo wymuszone", "Osoba nie powinna być wpuszczona!", false);
             if (data.getIleRazy() == 1) eb.addField("Ilość weryfikacji", "Jest to pierwsza weryfikacja tego użytkownika.", false);
@@ -278,7 +277,7 @@ public class Weryfikacja {
             e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
         }
         if (emote.getId().equals(Config.instance.emotki.redTick)) {
-            e.getGuild().getController().kick(member).reason("Niezatwierdzenie regulaminu").complete();
+            e.getGuild().kick(member).reason("Niezatwierdzenie regulaminu").complete();
             e.getReaction().removeReaction(e.getUser()).complete();
             if (!Config.instance.funkcje.weryfikacja.logi) return;
             EmbedBuilder eb = new EmbedBuilder();
@@ -287,7 +286,7 @@ public class Weryfikacja {
             eb.setTimestamp(Instant.now());
             eb.setDescription("Osoba " + e.getUser().getAsMention() + " nie zatwierdzila regulaminu.");
             eb.addField("Data dołączenia na Discorda", new SimpleDateFormat("dd.MM.yyyy HH:mm:ss")
-                    .format(Date.from(e.getUser().getCreationTime().toInstant())), false);
+                    .format(Date.from(e.getUser().getTimeCreated().toInstant())), false);
             e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).complete();
         }
     }
@@ -298,7 +297,7 @@ public class Weryfikacja {
         if (mem == null) return;
         if (!mem.getRoles().contains(e.getJDA()
                 .getGuildById(Config.instance.guildId).getRoleById(Config.instance.role.rolaUzytkownika))) return;
-        e.getJDA().getGuildById(Config.instance.guildId).getController().removeSingleRoleFromMember(mem,
+        e.getJDA().getGuildById(Config.instance.guildId).removeRoleFromMember(mem,
                 e.getJDA().getGuildById(Config.instance.guildId).getRoleById(Config.instance.role.rolaUzytkownika)).complete();
         if (!Config.instance.funkcje.weryfikacja.logi) return;
         EmbedBuilder eb = new EmbedBuilder();
@@ -318,7 +317,7 @@ public class Weryfikacja {
         if (mem == null) return;
         if (!mem.getRoles().contains(e.getJDA()
                 .getGuildById(Config.instance.guildId).getRoleById(Config.instance.role.rolaUzytkownika))) return;
-        e.getJDA().getGuildById(Config.instance.guildId).getController().removeSingleRoleFromMember(mem,
+        e.getJDA().getGuildById(Config.instance.guildId).removeRoleFromMember(mem,
                 e.getJDA().getGuildById(Config.instance.guildId).getRoleById(Config.instance.role.rolaUzytkownika)).complete();
         if (!Config.instance.funkcje.weryfikacja.logi) return;
         EmbedBuilder eb = new EmbedBuilder();
@@ -328,13 +327,13 @@ public class Weryfikacja {
         eb.setDescription("Zabrano rolę " + e.getUser().getAsMention() + " za zmianę avataru.");
         byte[] img = new byte[0];
         try {
-            JSONObject zdjecie = NetworkUtil.getJson(Config.instance.api + "/api/polacz?zdjecie1=" +
+            JsonObject zdjecie = NetworkUtil.getJson(Config.instance.api + "/api/polacz?zdjecie[]=" +
                     URLEncoder.encode(e.getOldAvatarUrl().replace(".webp", ".png")
-                            + "?size=2048", "UTF-8") + "&zdjecie2=" +
+                            + "?size=2048", "UTF-8") + "&zdjecie[]=" +
                     URLEncoder.encode(e.getNewAvatarUrl().replace(".webp", ".png")
                             + "?size=2048", "UTF-8"), Config.instance.apiKey);
             if (zdjecie == null) throw new IOException("brak zdjecia");
-            img = NetworkUtil.getBytesFromBufferArray(zdjecie.getJSONObject("image").getJSONArray("data"));
+            img = NetworkUtil.getBytesFromBufferArray(zdjecie.getAsJsonObject("image").getAsJsonArray("data"));
             eb.appendDescription("\nNa zdjęciu po lewej jest stary avatar, po prawej nowy.");
             eb.setImage("attachment://avatary.png");
         } catch (Exception ignored) {

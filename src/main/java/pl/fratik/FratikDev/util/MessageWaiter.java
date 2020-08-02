@@ -2,9 +2,9 @@ package pl.fratik.FratikDev.util;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
@@ -28,7 +28,7 @@ public class MessageWaiter {
     }
 
     private boolean checkMessage(MessageReceivedEvent event) {
-        return event.getTextChannel() != null && event.getTextChannel().equals(context.getChannel())
+        return event.isFromGuild() && event.getTextChannel().equals(context.getChannel())
                 && event.getAuthor().equals(context.getUser());
     }
 

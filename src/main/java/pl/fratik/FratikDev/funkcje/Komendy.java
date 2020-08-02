@@ -2,10 +2,10 @@ package pl.fratik.FratikDev.funkcje;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
-import net.dv8tion.jda.core.entities.ISnowflake;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.entities.ISnowflake;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import pl.fratik.FratikDev.Config;
 
 import java.util.ArrayList;
@@ -56,7 +56,7 @@ public class Komendy {
                     return;
                 }
                 String suffix = " " + String.join(" ", args);
-                if (suffix.isEmpty()) {
+                if (suffix.trim().isEmpty()) {
                     e.getChannel().sendMessage("Suffix nie może być pusty!").queue();
                     return;
                 }
@@ -71,7 +71,7 @@ public class Komendy {
                                 done.getAndAdd(1);
                                 continue;
                             }
-                            e.getGuild().getController().setNickname(m, m.getEffectiveName() + suffix).complete();
+                            e.getGuild().modifyNickname(m, m.getEffectiveName() + suffix).complete();
                             done.getAndAdd(1);
                         } catch (Exception ignored) {
                             errors.getAndAdd(1);
@@ -81,8 +81,8 @@ public class Komendy {
                 while (done.get() + errors.get() != e.getGuild().getMembers().size()) {
                     mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                             .getAsMention() + " Pracuję... " +
-                            String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
-                                    String.valueOf(e.getGuild().getMembers().size()), String.valueOf(errors.get())))
+                            String.format("%s/%s (w tym %s nieudanych)", (done.get() + errors.get()),
+                                    e.getGuild().getMembers().size(), errors.get()))
                             .complete();
                     try {
                         Thread.sleep(2000);
@@ -92,8 +92,8 @@ public class Komendy {
                 }
                 mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                         .getAsMention() + " Pracuję... " +
-                        String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
-                                String.valueOf(e.getGuild().getMembers().size()), String.valueOf(errors.get())))
+                        String.format("%s/%s (w tym %s nieudanych)", (done.get() + errors.get()),
+                                e.getGuild().getMembers().size(), errors.get()))
                         .complete();
                 e.getChannel().sendMessage("Gotowe!").queue();
                 break;
@@ -104,7 +104,7 @@ public class Komendy {
                     return;
                 }
                 String suffix = " " + String.join(" ", args);
-                if (suffix.isEmpty()) {
+                if (suffix.trim().isEmpty()) {
                     e.getChannel().sendMessage("Suffix nie może być pusty!").queue();
                     return;
                 }
@@ -116,7 +116,7 @@ public class Komendy {
                     for (Member m : e.getGuild().getMembers()) {
                         try {
                             if (!m.getEffectiveName().endsWith(suffix)) continue;
-                            e.getGuild().getController().setNickname(m, m.getEffectiveName().replaceAll(suffix, "")).complete();
+                            e.getGuild().modifyNickname(m, m.getEffectiveName().replaceAll(suffix, "")).complete();
                             done.getAndAdd(1);
                         } catch (Exception ignored) {
                             errors.getAndAdd(1);
@@ -126,8 +126,8 @@ public class Komendy {
                 while (done.get() + errors.get() != e.getGuild().getMembers().stream().filter(m -> m.getEffectiveName().endsWith(suffix)).count()) {
                     mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                             .getAsMention() + " Pracuję... " +
-                            String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
-                                    String.valueOf(e.getGuild().getMembers().size()), String.valueOf(errors.get())))
+                            String.format("%s/%s (w tym %s nieudanych)", (done.get() + errors.get()),
+                                    e.getGuild().getMembers().size(), errors.get()))
                             .complete();
                     try {
                         Thread.sleep(2000);
@@ -137,9 +137,9 @@ public class Komendy {
                 }
                 mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                         .getAsMention() + " Pracuję... " +
-                        String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
-                                String.valueOf(e.getGuild().getMembers().stream().filter(m -> m.getEffectiveName().endsWith(suffix)).count())
-                                , String.valueOf(errors.get())))
+                        String.format("%s/%s (w tym %s nieudanych)", (done.get() + errors.get()),
+                                e.getGuild().getMembers().stream().filter(m -> m.getEffectiveName().endsWith(suffix)).count()
+                                , errors.get()))
                         .complete();
                 e.getChannel().sendMessage("Gotowe!").queue();
                 break;
@@ -165,7 +165,7 @@ public class Komendy {
                                 done.getAndAdd(1);
                                 continue;
                             }
-                            e.getGuild().getController().setNickname(m, nowyNick).complete();
+                            e.getGuild().modifyNickname(m, nowyNick).complete();
                             done.getAndAdd(1);
                         } catch (Exception ignored) {
                             errors.getAndAdd(1);
@@ -175,8 +175,8 @@ public class Komendy {
                 while (done.get() + errors.get() != e.getGuild().getMembers().size()) {
                     mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                             .getAsMention() + " Pracuję... " +
-                            String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
-                                    String.valueOf(e.getGuild().getMembers().size()), String.valueOf(errors.get())))
+                            String.format("%s/%s (w tym %s nieudanych)", (done.get() + errors.get()),
+                                    e.getGuild().getMembers().size(), errors.get()))
                             .complete();
                     try {
                         Thread.sleep(2000);
@@ -186,8 +186,8 @@ public class Komendy {
                 }
                 mes.editMessage(e.getJDA().getEmoteById(Config.instance.emotki.loading)
                         .getAsMention() + " Pracuję... " +
-                        String.format("%s/%s (w tym %s nieudanych)", String.valueOf(done.get() + errors.get()),
-                                String.valueOf(e.getGuild().getMembers().size()), String.valueOf(errors.get())))
+                        String.format("%s/%s (w tym %s nieudanych)", (done.get() + errors.get()),
+                                e.getGuild().getMembers().size(), errors.get()))
                         .complete();
                 e.getChannel().sendMessage("Gotowe!").queue();
                 break;

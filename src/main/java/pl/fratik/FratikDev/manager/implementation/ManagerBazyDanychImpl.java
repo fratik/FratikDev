@@ -3,7 +3,7 @@ package pl.fratik.FratikDev.manager.implementation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.amy.pgorm.PgStore;
 import lombok.Getter;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

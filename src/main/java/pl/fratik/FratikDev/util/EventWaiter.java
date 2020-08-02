@@ -16,9 +16,9 @@ package pl.fratik.FratikDev.util;
  */
 
 import com.google.common.eventbus.Subscribe;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.ShutdownEvent;
-import net.dv8tion.jda.core.utils.Checks;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.ShutdownEvent;
+import net.dv8tion.jda.internal.utils.Checks;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,8 +33,8 @@ import java.util.stream.Stream;
 
 /**
  * <p>The EventWaiter is capable of handling specialized forms of
- * {@link Event Event} that must meet criteria not normally specifiable
- * without implementation of an {@link net.dv8tion.jda.core.hooks.EventListener EventListener}.
+ * {@link GenericEvent Event} that must meet criteria not normally specifiable
+ * without implementation of an {@link net.dv8tion.jda.api.hooks.EventListener EventListener}.
  *
  * <p>Creating an EventWaiter requires provision and/or creation of a
  * {@link ScheduledExecutorService Executor}, and thus a proper
@@ -135,7 +135,7 @@ public class EventWaiter
     }
 
     /**
-     * Waits an indefinite amount of time for an {@link Event Event} that
+     * Waits an indefinite amount of time for an {@link GenericEvent Event} that
      * returns {@code true} when tested with the provided {@link Predicate Predicate}.
      *
      * <p>When this occurs, the provided {@link Consumer Consumer} will accept and
@@ -157,13 +157,13 @@ public class EventWaiter
      *             <li>2) The internal threadPool is shut down, meaning that no more tasks can be submitted.</li>
      *         </ul>
      */
-    public <T extends Event> void waitForEvent(Class<T> classType, Predicate<T> condition, Consumer<T> action)
+    public <T extends GenericEvent> void waitForEvent(Class<T> classType, Predicate<T> condition, Consumer<T> action)
     {
         waitForEvent(classType, condition, action, -1, null, null);
     }
 
     /**
-     * Waits a predetermined amount of time for an {@link Event Event} that
+     * Waits a predetermined amount of time for an {@link GenericEvent Event} that
      * returns {@code true} when tested with the provided {@link Predicate Predicate}.
      *
      * <p>Once started, there are two possible outcomes:
@@ -198,7 +198,7 @@ public class EventWaiter
      *             <li>2) The internal threadPool is shut down, meaning that no more tasks can be submitted.</li>
      *         </ul>
      */
-    public <T extends Event> void waitForEvent(Class<T> classType, Predicate<T> condition, Consumer<T> action,
+    public <T extends GenericEvent> void waitForEvent(Class<T> classType, Predicate<T> condition, Consumer<T> action,
                                                long timeout, TimeUnit unit, Runnable timeoutAction)
     {
         Checks.check(!isShutdown(), "Attempted to register a WaitingEvent while the EventWaiter's threadPool was already shut down!");
@@ -222,7 +222,7 @@ public class EventWaiter
 
     @Subscribe
     @SuppressWarnings("unchecked")
-    public final void onEvent(Event event)
+    public final void onEvent(GenericEvent event)
     {
         Class c = event.getClass();
 
@@ -268,7 +268,7 @@ public class EventWaiter
         threadPool.shutdown();
     }
 
-    private class WaitingEvent<T extends Event>
+    private class WaitingEvent<T extends GenericEvent>
     {
         final Predicate<T> condition;
         final Consumer<T> action;

@@ -2,13 +2,13 @@ package pl.fratik.FratikDev.funkcje;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.MessageUpdateEvent;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.Config;
 import pl.fratik.FratikDev.entity.Urlop;
@@ -64,8 +64,8 @@ public class Urlopy {
                     }
                     if (u.getDataOd().equals(dzisiaj)) {
                         if (!(u.getDataOd().toInstant().toEpochMilli() - u.getDataDo().toInstant().toEpochMilli() >= -1209600000)) {
-                            jda.getGuildById(Config.instance.guildId).getController()
-                                    .removeSingleRoleFromMember(mem, jda.getGuildById(Config.instance.guildId)
+                            jda.getGuildById(Config.instance.guildId)
+                                    .removeRoleFromMember(mem, jda.getGuildById(Config.instance.guildId)
                                                     .getRoleById(Config.instance.role.globalAdmin)).complete();
                         }
                     }
@@ -75,10 +75,10 @@ public class Urlopy {
                         User user = jda.getUserById(u.getId());
                         Message m;
                         try {
-                            jda.getGuildById(Config.instance.guildId).getController()
-                                    .addSingleRoleToMember(mem, jda.getGuildById(Config.instance.guildId)
+                            jda.getGuildById(Config.instance.guildId)
+                                    .addRoleToMember(mem, jda.getGuildById(Config.instance.guildId)
                                                     .getRoleById(Config.instance.role.globalAdmin)).complete();
-                            m = jda.getTextChannelById(Config.instance.kanaly.urlopyGa).getMessageById(u.getMessageId()).complete();
+                            m = jda.getTextChannelById(Config.instance.kanaly.urlopyGa).retrieveMessageById(u.getMessageId()).complete();
                             if (m == null) continue;
                             ignoredDelete.add(m);
                             m.delete().complete();
@@ -101,7 +101,7 @@ public class Urlopy {
                         if (mem.getNickname() != null && mem.getNickname().startsWith(_nick)) continue;
                         if (nick.length() >= 32) nick = nick.substring(0, 29) + "...";
                         try {
-                            mem.getGuild().getController().setNickname(mem, nick).complete();
+                            mem.getGuild().modifyNickname(mem,  nick).complete();
                         } catch (Exception e) {
                             LoggerFactory.getLogger(Urlopy.class).error("nie udało się zmienić nicku dla " + mem, e);
                         }
@@ -111,7 +111,7 @@ public class Urlopy {
                         if (effName == null) effName = "";
                         if (effName.startsWith("[Wagary")) {
                             try {
-                                mem.getGuild().getController().setNickname(mem, null).complete();
+                                mem.getGuild().modifyNickname(mem, null).complete();
                             } catch (Exception e) {
                                 LoggerFactory.getLogger(Urlopy.class).error("nie udało się zmienić nicku dla " + mem, e);
                             }
@@ -278,7 +278,7 @@ public class Urlopy {
             return;
         if (!e.getChannel().getId().equals(Config.instance.kanaly.urlopyGa)) return;
         if (e.getUser().getId().equals(e.getJDA().getSelfUser().getId())) return;
-        Message msg = e.getChannel().getMessageById(e.getMessageId()).complete();
+        Message msg = e.getChannel().retrieveMessageById(e.getMessageId()).complete();
         if (e.getUser().equals(msg.getAuthor())
                 || !msg.getGuild().getMemberById(e.getUser().getId()).getRoles()
                 .contains(msg.getGuild().getRoleById(Config.instance.role.zarzadzajacyGa))) {
@@ -318,8 +318,8 @@ public class Urlopy {
                     cal.set(Calendar.SECOND, 0);
                     cal.set(Calendar.MILLISECOND, 0);
                     dzisiaj = Date.from(cal.toInstant());
-                    if (data.getDataOd().equals(dzisiaj)) msg.getGuild().getController()
-                            .removeSingleRoleFromMember(msg.getMember(),
+                    if (data.getDataOd().equals(dzisiaj)) msg.getGuild()
+                            .removeRoleFromMember(msg.getMember(),
                                     msg.getGuild().getRoleById(Config.instance.role.globalAdmin)).complete();
                     msg.getAuthor().openPrivateChannel().complete()
                             .sendMessage("Twój urlop został przyjęty, a rola zgodnie z regulaminem została/zostanie usunięta na okres urlopu. \uD83C\uDFD6").complete();
@@ -364,8 +364,8 @@ public class Urlopy {
                         .addField("Powód anulowania", "Edytowanie wiadomości", false)
                         .build()
         ).queue();
-        e.getGuild().getController()
-                .addSingleRoleToMember(e.getMember(),
+        e.getGuild()
+                .addRoleToMember(e.getMember(),
                         e.getGuild().getRoleById(Config.instance.role.globalAdmin)).complete();
         Urlop data = managerBazyDanych.getUrlop(e.getAuthor());
         data.setValid(false);
@@ -408,8 +408,7 @@ public class Urlopy {
                             .addField("Powód anulowania", powod, false)
                             .build()
             ).queue();
-            e.getGuild().getController()
-                    .addSingleRoleToMember(e.getGuild().getMemberById(finalData.getId()),
+            e.getGuild().addRoleToMember(e.getGuild().getMemberById(finalData.getId()),
                             e.getGuild().getRoleById(Config.instance.role.globalAdmin)).queue();
         });
     }

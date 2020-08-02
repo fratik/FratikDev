@@ -1,9 +1,10 @@
 /* kradzione z fbota v3 bo jestem leniwym śmierdzielem */
 package pl.fratik.FratikDev.util;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import okhttp3.*;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -13,6 +14,7 @@ import java.net.URLEncoder;
 public class NetworkUtil {
     private static final String USER_AGENT = "FratikDev/" + NetworkUtil.class.getPackage().getImplementationVersion() + " (https://fratikbot.pl)";
     private static OkHttpClient client = new OkHttpClient();
+    private static Gson gson = new Gson();
 
     public static byte[] download(String url, String authorization) throws IOException {
         Request.Builder req = new Request.Builder()
@@ -36,14 +38,14 @@ public class NetworkUtil {
         return client.newCall(req.build()).execute();
     }
 
-    public static JSONObject getJson(String url, String authorization) throws IOException {
+    public static JsonObject getJson(String url, String authorization) throws IOException {
         Request req = new Request.Builder()
                 .header("User-Agent", USER_AGENT)
                 .header("Authorization", authorization)
                 .url(url)
                 .build();
         Response res = client.newCall(req).execute();
-        return res.body() == null ? null : new JSONObject(res.body().string());
+        return res.body() == null ? null : gson.fromJson(res.body().string(), JsonObject.class);
     }
 
     public static byte[] download(String url) throws IOException {
@@ -63,10 +65,10 @@ public class NetworkUtil {
         return arr;
     }
 
-    public static byte[] getBytesFromBufferArray(JSONArray bufferArray) {
-        byte[] arr = new byte[bufferArray.length()];
-        for (int i = 0; i < bufferArray.length(); i++) {
-            arr[i] = Integer.valueOf((int) bufferArray.get(i)).byteValue();
+    public static byte[] getBytesFromBufferArray(JsonArray bufferArray) {
+        byte[] arr = new byte[bufferArray.size()];
+        for (int i = 0; i < bufferArray.size(); i++) {
+            arr[i] = Integer.valueOf(bufferArray.get(i).getAsInt()).byteValue();
         }
         return arr;
     }

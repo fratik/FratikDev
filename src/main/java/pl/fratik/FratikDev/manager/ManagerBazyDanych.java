@@ -1,6 +1,6 @@
 package pl.fratik.FratikDev.manager;
 
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.NotNull;
 import pl.fratik.FratikDev.entity.DatabaseEntity;
 import pl.fratik.FratikDev.entity.Urlop;
