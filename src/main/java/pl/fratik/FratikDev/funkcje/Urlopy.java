@@ -140,6 +140,22 @@ public class Urlopy {
             return;
         }
         Message msg = event.getMessage();
+        if (msg.getContentRaw().length() > 1000) {
+            ignoredDelete.add(msg);
+            msg.delete().queue();
+            Message _temp = msg.getChannel().sendMessage(msg.getAuthor().getAsMention() +
+                    ": Wiadomość z urlopem nie może przekraczać 1000 znaków!").complete();
+            event.getJDA().getTextChannelById(Config.instance.kanaly.logiUrlopow).sendMessage(
+                    new EmbedBuilder().setAuthor(msg.getAuthor().getName() + "#" + msg.getAuthor().getDiscriminator(),
+                            null, msg.getAuthor().getEffectiveAvatarUrl().replace(".webp", ".png"))
+                            .setColor(Color.decode("#ff0000")).setFooter("Odrzucony urlop", null)
+                            .addField("Powód odrzucenia", "Wiadomość przekroczyła 1k znaków", false)
+                            .addField("Osoba odrzucająca", event.getJDA().getSelfUser().getAsMention(), false)
+                            .build()
+            ).queue();
+            _temp.delete().queueAfter(5, TimeUnit.SECONDS);
+            return;
+        }
         //#region matcher'y
         Matcher matcherOd;
         Matcher matcherDo;
@@ -158,6 +174,7 @@ public class Urlopy {
                     new EmbedBuilder().setAuthor(msg.getAuthor().getName() + "#" + msg.getAuthor().getDiscriminator(),
                             null, msg.getAuthor().getEffectiveAvatarUrl().replace(".webp", ".png"))
                             .setColor(Color.decode("#ff0000")).setFooter("Odrzucony urlop", null)
+                            .addField("Treść urlopu", msg.getContentRaw(), false)
                             .addField("Powód odrzucenia", "Nieprawidłowy format", false)
                             .addField("Osoba odrzucająca", event.getJDA().getSelfUser().getAsMention(), false)
                             .build()
@@ -173,6 +190,7 @@ public class Urlopy {
                     new EmbedBuilder().setAuthor(msg.getAuthor().getName() + "#" + msg.getAuthor().getDiscriminator(),
                             null, msg.getAuthor().getEffectiveAvatarUrl().replace(".webp", ".png"))
                             .setColor(Color.decode("#ff0000")).setFooter("Odrzucony urlop", null)
+                            .addField("Treść urlopu", msg.getContentRaw(), false)
                             .addField("Powód odrzucenia", "Nieprawidłowy format", false)
                             .addField("Osoba odrzucająca", event.getJDA().getSelfUser().getAsMention(), false)
                             .build()
@@ -201,6 +219,7 @@ public class Urlopy {
                     new EmbedBuilder().setAuthor(msg.getAuthor().getName() + "#" + msg.getAuthor().getDiscriminator(),
                             null, msg.getAuthor().getEffectiveAvatarUrl().replace(".webp", ".png"))
                             .setColor(Color.decode("#ff0000")).setFooter("Odrzucony urlop", null)
+                            .addField("Treść urlopu", msg.getContentRaw(), false)
                             .addField("Powód odrzucenia", "Nieprawidłowy format", false)
                             .addField("Osoba odrzucająca", event.getJDA().getSelfUser().getAsMention(), false)
                             .build()
@@ -217,6 +236,7 @@ public class Urlopy {
                     new EmbedBuilder().setAuthor(msg.getAuthor().getName() + "#" + msg.getAuthor().getDiscriminator(),
                             null, msg.getAuthor().getEffectiveAvatarUrl().replace(".webp", ".png"))
                             .setColor(Color.decode("#ff0000")).setFooter("Odrzucony urlop", null)
+                            .addField("Treść urlopu", msg.getContentRaw(), false)
                             .addField("Powód odrzucenia", "Różnica dat krótsza od 3 dni", false)
                             .addField("Osoba odrzucająca", event.getJDA().getSelfUser().getAsMention(), false)
                             .build()
@@ -246,6 +266,7 @@ public class Urlopy {
                     new EmbedBuilder().setAuthor(msg.getAuthor().getName() + "#" + msg.getAuthor().getDiscriminator(),
                             null, msg.getAuthor().getEffectiveAvatarUrl().replace(".webp", ".png"))
                             .setColor(Color.decode("#ff0000")).setFooter("Odrzucony urlop", null)
+                            .addField("Treść urlopu", msg.getContentRaw(), false)
                             .addField("Powód odrzucenia", "Cooldown", false)
                             .addField("Osoba odrzucająca", event.getJDA().getSelfUser().getAsMention(), false)
                             .build()
@@ -301,6 +322,7 @@ public class Urlopy {
                     new EmbedBuilder().setAuthor(msg.getAuthor().getName() + "#" + msg.getAuthor().getDiscriminator(),
                             null, msg.getAuthor().getEffectiveAvatarUrl().replace(".webp", ".png"))
                             .setColor(Color.decode("#00ff00")).setFooter("Zatwierdzony urlop", null)
+                            .addField("Treść urlopu", msg.getContentRaw(), false)
                             .addField("Osoba zatwierdzająca", e.getUser().getAsMention(), false)
                             .build()
             ).queue();
@@ -334,6 +356,7 @@ public class Urlopy {
                         new EmbedBuilder().setAuthor(msg.getAuthor().getName() + "#" + msg.getAuthor().getDiscriminator(),
                                 null, msg.getAuthor().getEffectiveAvatarUrl().replace(".webp", ".png"))
                                 .setColor(Color.decode("#ff0000")).setFooter("Odrzucony urlop", null)
+                                .addField("Treść urlopu", msg.getContentRaw(), false)
                                 .addField("Powód odrzucenia", powod, false)
                                 .addField("Osoba odrzucająca", e.getUser().getAsMention(), false)
                                 .build()
@@ -343,7 +366,7 @@ public class Urlopy {
                 managerBazyDanych.usunUrlop(msg.getAuthor());
                 try {
                     msg.getAuthor().openPrivateChannel().complete()
-                            .sendMessage("Twój urlop został odrzucony.").complete();
+                            .sendMessage("Twój urlop został odrzucony. Powód podany przez ZGA:\n" + powod).complete();
                 } catch (Exception ignored) {}
             });
         }
