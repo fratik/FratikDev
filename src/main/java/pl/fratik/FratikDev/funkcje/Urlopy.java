@@ -121,9 +121,9 @@ public class Urlopy {
                         managerBazyDanych.usunUrlop(jda.getUserById(u.getId()));
                     }
                 }
-                intervalLock = false;
             } catch (Throwable t) {
                 LoggerFactory.getLogger(Urlopy.class).error("coś nie pykło", t);
+            } finally {
                 intervalLock = false;
             }
         }, 60, 60, TimeUnit.SECONDS);
