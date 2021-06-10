@@ -25,7 +25,8 @@ public class Config {
     }
 
     public class Wiadomosci {
-        public String zatwierdzRegulaminWiadomosc = "";
+        public String zatwierdzRegulaminTresc = "";
+        public String zatwierdzRegulaminWiadomoscBota = null;
     }
 
     public class Emotki {

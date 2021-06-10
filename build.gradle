@@ -11,18 +11,21 @@ group 'pl.fratik'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def jdaVersion = '4.2.0_168'
+def jdaVersion = '4.2.1_276'
 
 repositories {
     mavenCentral()
     jcenter()
     maven { url "https://plugins.gradle.org/m2/" }
     maven { url 'https://jitpack.io' }
+    maven { url 'https://m2.dv8tion.net/releases' }
 }
 
 
 dependencies {
-    compile 'net.dv8tion:JDA:' + jdaVersion
+    compile('net.dv8tion:JDA:' + jdaVersion) {
+        exclude module: 'opus-java'
+    }
     compile 'com.intellij:annotations:+@jar'
     compile 'org.slf4j:slf4j-api:1.7.5'
     compile 'ch.qos.logback:logback-classic:1.2.3'

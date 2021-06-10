@@ -5,23 +5,28 @@ import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.user.update.UserUpdateAvatarEvent;
 import net.dv8tion.jda.api.events.user.update.UserUpdateNameEvent;
+import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.Config;
+import pl.fratik.FratikDev.Main;
 import pl.fratik.FratikDev.entity.WeryfikacjaInfo;
 import pl.fratik.FratikDev.manager.ManagerBazyDanych;
 import pl.fratik.FratikDev.util.NetworkUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -44,16 +49,11 @@ public class Weryfikacja {
 
     public Weryfikacja(ManagerBazyDanych managerBazyDanych, JDA jda) {
         this.managerBazyDanych = managerBazyDanych;
-        Message zRegMes = jda.getTextChannelById(Config.instance.kanaly.zatwierdzRegulamin).retrieveMessageById(Config.instance.wiadomosci.zatwierdzRegulaminWiadomosc).complete();
-        if (zRegMes == null) throw new IllegalStateException("Brak pierwszej wiadomosci");
-        try {
-            zRegMes.clearReactions().complete();
-        } catch (Exception ignored) {
-            throw new IllegalStateException("Bot nie ma uprawnień na kanale weryfikacyjnym!");
-        }
-        zRegMes = jda.getTextChannelById(Config.instance.kanaly.zatwierdzRegulamin).retrieveMessageById(Config.instance.wiadomosci.zatwierdzRegulaminWiadomosc).complete();
-        zRegMes.addReaction(jda.getEmoteById(Config.instance.emotki.greenTick)).complete();
-        zRegMes.addReaction(jda.getEmoteById(Config.instance.emotki.redTick)).complete();
+        final TextChannel chan = jda.getTextChannelById(Config.instance.kanaly.zatwierdzRegulamin);
+        if (chan == null) throw new IllegalStateException("Nie znaleziono kanału zatwierdzRegulamin");
+        if (Config.instance.wiadomosci.zatwierdzRegulaminWiadomoscBota == null ||
+                chan.retrieveMessageById(Config.instance.wiadomosci.zatwierdzRegulaminWiadomoscBota).complete() == null)
+            setup(chan);
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
         executorService.scheduleWithFixedDelay(() -> {
             if (intervalLock || !Config.instance.funkcje.weryfikacja.zabierzRole) return;
@@ -146,6 +146,21 @@ public class Weryfikacja {
         Runtime.getRuntime().addShutdownHook(new Thread(executorService::shutdownNow));
     }
 
+    private void setup(TextChannel chan) {
+        Message sent = chan.sendMessage(Config.instance.wiadomosci.zatwierdzRegulaminTresc)
+                .setActionRow(
+                        Button.success("ACCEPT", "Akceptuję regulamin"),
+                        Button.danger("REJECT", "Nie akceptuję regulaminu")
+                ).complete();
+        Config.instance.wiadomosci.zatwierdzRegulaminWiadomoscBota = sent.getId();
+        try {
+            File cfg = new File("config.json");
+            Files.write(cfg.toPath(), Main.GSON.toJson(Config.instance).getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            LoggerFactory.getLogger(getClass()).error("Nie udało się zapisać poprawionej konfiguracji!", e);
+        }
+    }
+
     @Subscribe
     @AllowConcurrentEvents
     public void onMessage(MessageReceivedEvent e) {
@@ -161,14 +176,13 @@ public class Weryfikacja {
 
     @Subscribe
     @AllowConcurrentEvents
-    public void onMessageReactionAdd(MessageReactionAddEvent e) {
-        if (!e.getReactionEmote().isEmote() || !e.getChannel().getId().equals(Config.instance.kanaly.zatwierdzRegulamin)) return;
+    public void onMessageReactionAdd(ButtonClickEvent e) {
+        if (!e.getChannel().getId().equals(Config.instance.kanaly.zatwierdzRegulamin)) return;
         if (e.getUser().equals(e.getJDA().getSelfUser())) return;
         Message m = e.getChannel().retrieveMessageById(e.getMessageId()).complete();
-        if (!m.getId().equals(Config.instance.wiadomosci.zatwierdzRegulaminWiadomosc)) return;
-        Emote emote = e.getReactionEmote().getEmote();
+        if (!m.getId().equals(Config.instance.wiadomosci.zatwierdzRegulaminWiadomoscBota)) return;
         Member member = e.getMember();
-        if (emote.getId().equals(Config.instance.emotki.greenTick)) {
+        if (e.getComponentId().equals("ACCEPT")) {
             //#region daty
             Date wczesniejsza = new Date();
             Calendar cal = Calendar.getInstance();
@@ -202,10 +216,8 @@ public class Weryfikacja {
             if (!wymuszoneOdblokowanie && Config.instance.funkcje.weryfikacja.restrykcje) {
                 if ((teraz.after(wczesniejsza) && teraz.before(pozniejsza1)) || (teraz.after(wczesniejsza1) &&
                         teraz.before(pozniejsza))) {
-                    e.getChannel().sendMessage(e.getUser().getAsMention() + ", nie jest trochę za późno na " +
-                            "weryfikację? Spróbuj ponownie w normalnej porze!").complete().delete()
-                            .queueAfter(5, TimeUnit.SECONDS);
-                    e.getReaction().removeReaction(e.getUser()).complete();
+                    e.reply("Nie jest trochę za późno na weryfikację? Spróbuj ponownie w normalnej porze!")
+                            .setEphemeral(true).complete();
                     return;
                 }
                 OffsetDateTime dataUz = member.getUser().getTimeCreated();
@@ -215,18 +227,14 @@ public class Weryfikacja {
                     inst.add(Calendar.WEEK_OF_MONTH, 1);
                     String exp = "za " + Math.abs(ChronoUnit.DAYS.between(inst.getTime().toInstant(), Instant.now()))
                             + " dni!";
-                    e.getChannel().sendMessage("Przykro mi " + e.getUser().getAsMention() + ", " +
-                            "ale Twoje konto na Discord musi mieć co najmniej tydzień. Spróbuj ponownie " + exp)
-                            .complete().delete().queueAfter(5, TimeUnit.SECONDS);
-                    e.getReaction().removeReaction(e.getUser()).complete();
+                    e.reply("Przykro mi, ale Twoje konto na Discord " +
+                            "musi mieć co najmniej tydzień. Spróbuj ponownie " + exp).setEphemeral(true).complete();
                     return;
                 }
                 if (member.getTimeJoined().toInstant().toEpochMilli() - Instant.now().toEpochMilli() >= -300000) {
-                    e.getChannel().sendMessage("Ejejej, " + e.getUser().getAsMention() + "! " +
-                            "Widzę co tam robisz, nawet 5 minut nie minęło odkąd dołączyłeś/aś tutaj! " +
-                            "Nie ma szans byś w tak krótki okres czasu przeczytał(a) regulamin!").complete()
-                            .delete().queueAfter(5, TimeUnit.SECONDS);
-                    e.getReaction().removeReaction(e.getUser()).complete();
+                    e.reply("Ejejej, widzę co tam robisz! Nawet 5 minut nie minęło odkąd dołączyłeś/aś tutaj! " +
+                            "Nie ma szans byś w tak krótki okres czasu przeczytał(a) regulamin!")
+                            .setEphemeral(true).complete();
                     return;
                 }
             }
@@ -248,19 +256,17 @@ public class Weryfikacja {
                 if (nowyNick.isEmpty()) nowyNick = Config.instance.funkcje.weryfikacja.domyslnyNick;
             }
             if (e.getMember().getEffectiveName().equals(nowyNick)) {
-                e.getChannel().sendMessage(e.getUser().getAsMention() + ", witamy w gronie zweryfikowanych! Główny kanał" +
-                        " to <#" + Config.instance.kanaly.glownyKanal + "> btw.")
-                        .complete().delete().queueAfter(5, TimeUnit.SECONDS);
+                e.reply("Witamy w gronie zweryfikowanych! Główny kanał to " +
+                        "<#" + Config.instance.kanaly.glownyKanal + "> btw.").setEphemeral(true).complete();
             } else {
-                e.getChannel().sendMessage(e.getUser().getAsMention() + ", witamy w gronie zweryfikowanych! Główny kanał" +
-                        " to <#" + Config.instance.kanaly.glownyKanal + "> btw. Twój nick zawiera niedozwolone znaki, " +
+                e.reply("Witamy w gronie zweryfikowanych! Główny kanał to " +
+                        "<#" + Config.instance.kanaly.glownyKanal + "> btw. Twój nick zawiera niedozwolone znaki, " +
                         "został on ustawiony na '" + nowyNick + "'. Jeżeli coś się nie podoba, zgłoś się __miło__ do " +
-                        "administratora po zmianę nicku. Nie jest to nasz obowiązek.")
-                        .complete().delete().queueAfter(5, TimeUnit.SECONDS);
+                        "administratora po zmianę nicku. Nie jest to nasz obowiązek.").setEphemeral(true).complete();
                 e.getGuild().modifyNickname(e.getMember(), nowyNick).complete();
             }
-            e.getGuild().addRoleToMember(member, e.getGuild().getRoleById(Config.instance.role.rolaUzytkownika)).complete();
-            e.getReaction().removeReaction(e.getUser()).complete();
+            e.getGuild().addRoleToMember(member, e.getGuild().getRoleById(Config.instance.role.rolaUzytkownika))
+                    .completeAfter(5, TimeUnit.SECONDS);
             if (!Config.instance.funkcje.weryfikacja.logi) return;
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(decode("#00ff00"));
@@ -276,9 +282,9 @@ public class Weryfikacja {
             else eb.addField("Ilość weryfikacji", "Jest to " + data.getIleRazy() + " weryfikacja tego użytkownika.", false);
             e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
         }
-        if (emote.getId().equals(Config.instance.emotki.redTick)) {
+        if (e.getComponentId().equals("REJECT")) {
+            e.deferEdit().queue();
             e.getGuild().kick(member).reason("Niezatwierdzenie regulaminu").complete();
-            e.getReaction().removeReaction(e.getUser()).complete();
             if (!Config.instance.funkcje.weryfikacja.logi) return;
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(decode("#00ff00"));

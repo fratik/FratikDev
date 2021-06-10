@@ -28,10 +28,10 @@ import java.util.concurrent.Executors;
 
 public class Main {
 
+    public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     private Main(String token) throws InterruptedException, LoginException {
-        Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
         Config config = new Config();
         AsyncEventBus eventBus = new AsyncEventBus(Executors.newFixedThreadPool(4));
         File cfg = new File("config.json");
@@ -40,7 +40,7 @@ public class Main {
                 if (cfg.createNewFile()) {
                     config = new Config();
 
-                    Files.write(cfg.toPath(), gson.toJson(config).getBytes(StandardCharsets.UTF_8));
+                    Files.write(cfg.toPath(), GSON.toJson(config).getBytes(StandardCharsets.UTF_8));
                     logger.info("Konfiguracja stworzona, skonfiguruj bota!");
                     System.exit(1);
                 }
@@ -50,7 +50,7 @@ public class Main {
             }
         }
         try {
-            config = gson.fromJson(new FileReader(cfg), Config.class);
+            config = GSON.fromJson(new FileReader(cfg), Config.class);
         } catch (Exception e) {
             logger.error("Nie udało się odczytać konfiguracji!", e);
             System.exit(1);
