@@ -266,7 +266,7 @@ public class Weryfikacja {
                 e.getGuild().modifyNickname(e.getMember(), nowyNick).complete();
             }
             e.getGuild().addRoleToMember(member, e.getGuild().getRoleById(Config.instance.role.rolaUzytkownika))
-                    .completeAfter(5, TimeUnit.SECONDS);
+                    .complete();
             if (!Config.instance.funkcje.weryfikacja.logi) return;
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(decode("#00ff00"));
