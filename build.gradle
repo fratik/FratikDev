@@ -11,7 +11,7 @@ group 'pl.fratik'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def jdaVersion = '4.2.1_276'
+def jdaVersion = '4.3.0_299'
 
 repositories {
     mavenCentral()

@@ -3,12 +3,14 @@ package pl.fratik.FratikDev.manager.implementation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.amy.pgorm.PgStore;
 import lombok.Getter;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.Config;
 import pl.fratik.FratikDev.entity.DatabaseEntity;
+import pl.fratik.FratikDev.entity.SuffixData;
 import pl.fratik.FratikDev.entity.Urlop;
 import pl.fratik.FratikDev.entity.WeryfikacjaInfo;
 import pl.fratik.FratikDev.manager.ManagerBazyDanych;
@@ -44,6 +46,11 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
     }
 
     @Override
+    public SuffixData getSuffix(Guild guild) {
+        return pgStore.mapSync(SuffixData.class).load(guild.getId()).orElse(null);
+    }
+
+    @Override
     public List<Urlop> getAllUrlopy() {
         return pgStore.mapSync(Urlop.class).loadAll();
     }
@@ -74,6 +81,11 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
     }
 
     @Override
+    public void usunSuffix(Guild guild) {
+        pgStore.mapSync(SuffixData.class).delete(guild.getId());
+    }
+
+    @Override
     public void save(@NotNull DatabaseEntity entity) {
         ObjectMapper mapper = new ObjectMapper();
         String JSONed;
@@ -81,6 +93,7 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
         logger.debug("Zmiana danych w DB: {} -> {} -> {}", entity.getTableName(), entity.getClass().getName(), JSONed);
         if (entity instanceof Urlop) save((Urlop) entity);
         if (entity instanceof WeryfikacjaInfo) save((WeryfikacjaInfo) entity);
+        if (entity instanceof SuffixData) save((SuffixData) entity);
     }
 
     private void save(@NotNull Urlop config) {
@@ -89,6 +102,10 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
 
     private void save(@NotNull WeryfikacjaInfo config) {
         pgStore.mapSync(WeryfikacjaInfo.class).save(config);
+    }
+
+    private void save(@NotNull SuffixData config) {
+        pgStore.mapSync(SuffixData.class).save(config);
     }
 
 }

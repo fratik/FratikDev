@@ -40,7 +40,9 @@
       "wlaczone": true, // czy włączyć funkcję komend (true/false)
       "suffix": true, // czy włączyć komendę suffix i usunsuffix (true/false)
       "naprawnicki": true, // czy włączyć komendę naprawnicki (true/false)
-      "weryfikacja": true // czy włączyć komendę weryfikacja (true/false)
+      "weryfikacja": true, // czy włączyć komendę weryfikacja (true/false)
+      "ustawNick": true, // czy włączyć komendę ustawnick (true/false) - nie działa bez zezwolNaZmianeNicku
+      "blacklistNick": true // czy włączyć komendę blacklistnick (true/false) - nie działa bez zezwolNaZmianeNicku
     },
     "urlopy": true, // czy włączyć funkcję urlopów (true/false)
     "weryfikacja": {
@@ -50,7 +52,8 @@
       "naprawNick": true, // czy naprawiać nicki na weryfikacji (true/false)
       "domyslnyNick": "<nick który bot ma ustawiać jeżeli nick zawiera tylko nieprawidłowe znaki>",
       "logi": true, // czy używać logów weryfikacji (true/false)
-      "zabierzRolePrzyZmianieAvataru": true // czy zabierać weryfikację przy zmianie awataru (true/false)
+      "zabierzRolePrzyZmianieAvataru": true, // czy zabierać weryfikację przy zmianie awataru (true/false)
+      "zezwolNaZmianeNicku": true // czy zezwolić użytkownikom na zmianę nicku (true/false)
     }
   }
 }

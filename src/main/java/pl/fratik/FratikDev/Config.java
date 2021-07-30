@@ -59,6 +59,8 @@ public class Config {
         public boolean suffix = true;
         public boolean naprawnicki = true;
         public boolean weryfikacja = true;
+        public boolean ustawNick = true; //administracyjna opcja, zwykla zmiana jest niżej — Weryfikacja.zezwolNaZmianeNicku
+        public boolean blacklistNick = true;
     }
 
     public class Weryfikacja {
@@ -69,5 +71,6 @@ public class Config {
         public String domyslnyNick = "mam rakowy nick";
         public boolean logi = true;
         public boolean zabierzRolePrzyZmianieAvataru = true;
+        public boolean zezwolNaZmianeNicku = true;
     }
 }

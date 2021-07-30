@@ -18,11 +18,17 @@ public class WeryfikacjaInfo implements DatabaseEntity {
     private Date weryfikacja;
     private Date ostatniaWiadomosc;
     private int ileRazy = 1;
+    private String nickname;
+    private Boolean nicknameBlacklist;
 
     public WeryfikacjaInfo() {}
 
     public WeryfikacjaInfo(String id) {
         this.id = id;
+    }
+
+    public boolean isNicknameBlacklist() {
+        return nicknameBlacklist != null && nicknameBlacklist;
     }
 
     @Override

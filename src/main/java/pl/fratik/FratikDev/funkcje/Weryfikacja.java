@@ -18,6 +18,7 @@ import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.Config;
 import pl.fratik.FratikDev.Main;
+import pl.fratik.FratikDev.entity.SuffixData;
 import pl.fratik.FratikDev.entity.WeryfikacjaInfo;
 import pl.fratik.FratikDev.manager.ManagerBazyDanych;
 import pl.fratik.FratikDev.util.NetworkUtil;
@@ -247,22 +248,16 @@ public class Weryfikacja {
             }
             data.setWeryfikacja(new Date());
             managerBazyDanych.save(data);
-            String nowyNick = e.getMember().getEffectiveName();
-            if (Config.instance.funkcje.weryfikacja.naprawNick) {
-                nowyNick = e.getUser().getName().replaceAll("[^A-Za-z0-9 ĄąĆćĘęŁłŃńÓóŚśŹźŻż./\\\\!@#$%^&*()_+\\-=\\[\\]';<>?,~`{}|\":]", "");
-                Matcher matcher = Pattern.compile("^([^A-Za-z0-9ĄąĆćĘęŁłŃńÓóŚśŹźŻż]+)").matcher(nowyNick);
-                boolean oho = matcher.find();
-                if (oho) nowyNick = nowyNick.replaceFirst(Pattern.quote(matcher.group(1)), "");
-                if (nowyNick.isEmpty()) nowyNick = Config.instance.funkcje.weryfikacja.domyslnyNick;
-            }
+            String nowyNick = getNick(e.getMember(), e.getMember().getEffectiveName());
+            if (nowyNick.isEmpty()) nowyNick = Config.instance.funkcje.weryfikacja.domyslnyNick + getSuffix(e.getMember());
+            if (nowyNick.length() > 32) nowyNick = nowyNick.substring(0, 32);
             if (e.getMember().getEffectiveName().equals(nowyNick)) {
                 e.reply("Witamy w gronie zweryfikowanych! Główny kanał to " +
                         "<#" + Config.instance.kanaly.glownyKanal + "> btw.").setEphemeral(true).complete();
             } else {
                 e.reply("Witamy w gronie zweryfikowanych! Główny kanał to " +
-                        "<#" + Config.instance.kanaly.glownyKanal + "> btw. Twój nick zawiera niedozwolone znaki, " +
-                        "został on ustawiony na '" + nowyNick + "'. Jeżeli coś się nie podoba, zgłoś się __miło__ do " +
-                        "administratora po zmianę nicku. Nie jest to nasz obowiązek.").setEphemeral(true).complete();
+                        "<#" + Config.instance.kanaly.glownyKanal + "> btw. Twój nick został ustawiony na " +
+                        "'" + nowyNick + "'. Jeżeli chcesz go zmienić, użyj komendy /nick.").setEphemeral(true).complete();
                 e.getGuild().modifyNickname(e.getMember(), nowyNick).complete();
             }
             e.getGuild().addRoleToMember(member, e.getGuild().getRoleById(Config.instance.role.rolaUzytkownika))
@@ -295,6 +290,32 @@ public class Weryfikacja {
                     .format(Date.from(e.getUser().getTimeCreated().toInstant())), false);
             e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).complete();
         }
+    }
+
+    public String getNick(Member member, String nick) {
+        String nickname;
+        if (Config.instance.funkcje.weryfikacja.zezwolNaZmianeNicku)
+            nickname = managerBazyDanych.getWeryfikacja(member.getUser()).getNickname();
+        else nickname = null;
+        if (nickname == null) nickname = fixNick(nick);
+        if (nickname.isEmpty()) return "";
+        return nickname + getSuffix(member);
+    }
+
+    public String getSuffix(Member member) {
+        if (!Config.instance.funkcje.komendy.suffix) return "";
+        SuffixData suffix = managerBazyDanych.getSuffix(member.getGuild());
+        if (suffix == null) return "";
+        return " " + suffix.getSuffix();
+    }
+
+    public static String fixNick(String nick) {
+        if (!Config.instance.funkcje.weryfikacja.naprawNick) return nick;
+        String nowyNick = nick.replaceAll("[^A-Za-z0-9 ĄąĆćĘęŁłŃńÓóŚśŹźŻż./\\\\!@#$%^&*()_+\\-=\\[\\]';<>?,~`{}|\":]", "");
+        Matcher matcher = Pattern.compile("^([^A-Za-z0-9ĄąĆćĘęŁłŃńÓóŚśŹźŻż]+)").matcher(nowyNick);
+        boolean oho = matcher.find();
+        if (oho) nowyNick = nowyNick.replaceFirst(Pattern.quote(matcher.group(1)), "");
+        return nowyNick;
     }
 
     @Subscribe

@@ -73,7 +73,7 @@ public class Main {
         if (Config.instance.funkcje.weryfikacja.wlaczone) weryfikacja = new Weryfikacja(managerBazyDanych, jda);
         else weryfikacja = null;
         Komendy komendy;
-        if (Config.instance.funkcje.komendy.wlaczone) komendy = new Komendy();
+        if (Config.instance.funkcje.komendy.wlaczone) komendy = new Komendy(weryfikacja, managerBazyDanych, jda);
         else komendy = null;
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             eventWaiter.shutdown();
