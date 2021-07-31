@@ -206,7 +206,8 @@ public class Komendy {
                 eb.setTimestamp(Instant.now());
                 eb.setDescription(e.getUser().getAsMention() + " (" + e.getUser().getName()
                         + "#" + e.getUser().getDiscriminator() + ", " + e.getUser().getId() + ") zmienił swój nick!");
-                eb.addField("Nowy nick", nick, false);
+                if (nick != null) eb.addField("Nowy nick", nick, false);
+                else eb.addField("Nick", "zresetowany", false);
                 e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
                 break;
             }
@@ -285,7 +286,8 @@ public class Komendy {
                 eb.setTimestamp(Instant.now());
                 eb.setDescription("Administrator zmienił nick " + mem.getAsMention() + " (" + mem.getUser().getAsTag() + ", " + mem.getId() + ").");
                 eb.addField("Zmieniający nick", e.getUser().getAsMention(), false);
-                eb.addField("Nick", nick, false);
+                if (nick != null) eb.addField("Nowy nick", nick, false);
+                else eb.addField("Nick", "zresetowany", false);
                 e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
                 break;
             }
