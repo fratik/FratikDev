@@ -248,7 +248,7 @@ public class Weryfikacja {
             }
             data.setWeryfikacja(new Date());
             managerBazyDanych.save(data);
-            String nowyNick = getNick(e.getMember(), e.getMember().getEffectiveName());
+            String nowyNick = getNick(e.getMember(), e.getUser().getName());
             if (nowyNick.isEmpty()) nowyNick = Config.instance.funkcje.weryfikacja.domyslnyNick + getSuffix(e.getMember());
             if (nowyNick.length() > 32) nowyNick = nowyNick.substring(0, 32);
             if (e.getMember().getEffectiveName().equals(nowyNick)) {
