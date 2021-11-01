@@ -41,8 +41,11 @@
       "suffix": true, // czy włączyć komendę suffix i usunsuffix (true/false)
       "naprawnicki": true, // czy włączyć komendę naprawnicki (true/false)
       "weryfikacja": true, // czy włączyć komendę weryfikacja (true/false)
-      "ustawNick": true, // czy włączyć komendę ustawnick (true/false) - nie działa bez zezwolNaZmianeNicku
-      "blacklistNick": true // czy włączyć komendę blacklistnick (true/false) - nie działa bez zezwolNaZmianeNicku
+      "ustawNick": true, // czy włączyć komendę admin nick ustaw (true/false) - nie działa bez zezwolNaZmianeNicku
+      "blacklistNick": true, // czy włączyć komendę admin nick blacklist (true/false) - nie działa bez zezwolNaZmianeNicku
+      "edytujRole": true, // czy włączyć komendę admin personalizacja edytuj (true/false) - nie działa bez customRole.wlaczone
+      "usunRole": true, // czy włączyć komendę admin personalizacja usun (true/false) - nie działa bez customRole.wlaczone
+      "blacklistRole": true // czy włączyć komendę admin personalizacja blacklist (true/false) - nie działa bez customRole.wlaczone
     },
     "urlopy": true, // czy włączyć funkcję urlopów (true/false)
     "weryfikacja": {
@@ -54,6 +57,14 @@
       "logi": true, // czy używać logów weryfikacji (true/false)
       "zabierzRolePrzyZmianieAvataru": true, // czy zabierać weryfikację przy zmianie awataru (true/false)
       "zezwolNaZmianeNicku": true // czy zezwolić użytkownikom na zmianę nicku (true/false)
+    },
+    "customRole": {
+      "wlaczone": true, // czy włączyć funkcję personalizacji (true/false)
+      "tylkoDlaBoosterow": true, // czy jest to funkcja tylko dla boosterów (true/false)
+      "zezwolNaZmianeKoloru": true, // czy zezwolić na zmianę koloru (true/false)
+      "zezwolNaZmianeIkony": true, // czy zezwolić na zmianę ikony (true/false)
+      "weryfikacjaAdministracyjna": "<ID kanału gdzie administracja weryfikuje ikony>",
+      "logi": true // czy włączyć logi (true/false) - logi trafiają do kanaly.logiWeryfikacji
     }
   }
 }

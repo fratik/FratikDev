@@ -39,6 +39,7 @@ public class Main {
             try {
                 if (cfg.createNewFile()) {
                     config = new Config();
+                    config.funkcje.customRole.weryfikacjaAdministracyjna = "<ID kanału>";
 
                     Files.write(cfg.toPath(), GSON.toJson(config).getBytes(StandardCharsets.UTF_8));
                     logger.info("Konfiguracja stworzona, skonfiguruj bota!");
