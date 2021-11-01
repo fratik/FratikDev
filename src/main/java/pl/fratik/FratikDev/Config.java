@@ -16,7 +16,7 @@ public class Config {
     public String apiKey = "";
     public Funkcje funkcje = new Funkcje();
 
-    public class Kanaly {
+    public static class Kanaly {
         public String urlopyGa = "";
         public String zatwierdzRegulamin = "";
         public String logiUrlopow = "";
@@ -24,48 +24,62 @@ public class Config {
         public String logiWeryfikacji = "";
     }
 
-    public class Wiadomosci {
+    public static class Wiadomosci {
         public String zatwierdzRegulaminTresc = "";
         public String zatwierdzRegulaminWiadomoscBota = null;
     }
 
-    public class Emotki {
+    public static class Emotki {
         public String greenTick = "436919889207361536";
         public String redTick = "436919889232658442";
         public String loading = "503651397049516053";
     }
 
-    public class Role {
+    public static class Role {
         public String globalAdmin = "";
         public String admin = "";
         public String zarzadzajacyGa = "";
         public String rolaUzytkownika = "";
     }
 
-    public class Database {
+    public static class Database {
         public String jdbcUrl = "jdbc:postgresql://localhost/fratikdev";
         public String user = "postgres";
         public String password = "";
     }
 
-    public class Funkcje {
+    public static class Funkcje {
         public Komendy komendy = new Komendy();
         public boolean urlopy = true;
         public Weryfikacja weryfikacja = new Weryfikacja();
+        public CustomRole customRole = new CustomRole();
     }
 
-    public class Komendy {
+    public static class Komendy {
         public boolean wlaczone = true;
         public boolean suffix = true;
         public boolean naprawnicki = true;
         public boolean weryfikacja = true;
         public boolean ustawNick = true; //administracyjna opcja, zwykla zmiana jest niżej — Weryfikacja.zezwolNaZmianeNicku
         public boolean blacklistNick = true;
+        public boolean edytujRole = true; //administracyjna opcja, patrz CustomRole.wlaczone
+        public boolean usunRole = true;
+        public boolean blacklistRole = true;
     }
 
-    public class Weryfikacja {
+    public static class CustomRole {
+        public boolean wlaczone = true;
+        public boolean tylkoDlaBoosterow = true;
+        public boolean zezwolNaZmianeKoloru = true;
+        public boolean zezwolNaZmianeIkony = true;
+        public boolean weryfikacjaAdministracyjna = true; // wkrótce
+        public boolean logi = true;
+    }
+
+    public static class Weryfikacja {
         public boolean wlaczone = true;
         public boolean zabierzRole = true;
+        public boolean zabierajBoosterom = false;
         public boolean restrykcje = true;
         public boolean naprawNick = true;
         public String domyslnyNick = "mam rakowy nick";

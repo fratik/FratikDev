@@ -3,10 +3,7 @@ package pl.fratik.FratikDev.manager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.NotNull;
-import pl.fratik.FratikDev.entity.DatabaseEntity;
-import pl.fratik.FratikDev.entity.SuffixData;
-import pl.fratik.FratikDev.entity.Urlop;
-import pl.fratik.FratikDev.entity.WeryfikacjaInfo;
+import pl.fratik.FratikDev.entity.*;
 
 import java.util.List;
 
@@ -23,6 +20,8 @@ public interface ManagerBazyDanych {
 
     WeryfikacjaInfo getWeryfikacja(User user);
 
+    RoleData getRoleData(User user);
+
 //    List<WeryfikacjaInfo> getAllWeryfikacje();
 
     void usunUrlop(User user);
@@ -32,6 +31,8 @@ public interface ManagerBazyDanych {
     void usunWeryfikacje(User user);
 
     void usunSuffix(Guild guild);
+
+    void usunRole(User user);
 
     void save(@NotNull DatabaseEntity entity);
 }

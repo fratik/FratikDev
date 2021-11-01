@@ -9,10 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.Config;
-import pl.fratik.FratikDev.entity.DatabaseEntity;
-import pl.fratik.FratikDev.entity.SuffixData;
-import pl.fratik.FratikDev.entity.Urlop;
-import pl.fratik.FratikDev.entity.WeryfikacjaInfo;
+import pl.fratik.FratikDev.entity.*;
 import pl.fratik.FratikDev.manager.ManagerBazyDanych;
 
 import java.util.List;
@@ -61,7 +58,21 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
         return data.orElse(null);
     }
 
-//    @Override
+    @Override
+    public RoleData getRoleData(User user) {
+        return pgStore.mapSync(RoleData.class).load(user.getId()).orElse(null);
+    }
+
+    @Override
+    public void usunRole(User user) {
+        usunRole(user.getId());
+    }
+
+    public void usunRole(String id) {
+        pgStore.mapSync(RoleData.class).delete(id);
+    }
+
+    //    @Override
 //    public List<WeryfikacjaInfo> getAllWeryfikacje() {
 //        return pgStore.mapSync(WeryfikacjaInfo.class).loadAll();
 //    }

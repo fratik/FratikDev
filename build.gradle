@@ -11,7 +11,7 @@ group 'pl.fratik'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def jdaVersion = '4.3.0_299'
+def jdaVersion = '4.3.0_339'
 
 repositories {
     mavenCentral()
@@ -23,7 +23,8 @@ repositories {
 
 
 dependencies {
-    compile('net.dv8tion:JDA:' + jdaVersion) {
+//    compile('net.dv8tion:JDA:' + jdaVersion) {
+    compile('com.github.caneleex:JDA:b11e94e598') {
         exclude module: 'opus-java'
     }
     compile 'com.intellij:annotations:+@jar'

@@ -5,29 +5,39 @@ import com.google.common.eventbus.Subscribe;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.ISnowflake;
-import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
-import net.dv8tion.jda.api.utils.AllowedMentions;
+import net.dv8tion.jda.api.interactions.components.Component;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.Config;
+import pl.fratik.FratikDev.Main;
+import pl.fratik.FratikDev.entity.RoleData;
 import pl.fratik.FratikDev.entity.SuffixData;
 import pl.fratik.FratikDev.entity.WeryfikacjaInfo;
 import pl.fratik.FratikDev.manager.ManagerBazyDanych;
+import pl.fratik.FratikDev.util.EventWaiter;
+import pl.fratik.FratikDev.util.MessageWaiter;
+import pl.fratik.FratikDev.util.NetworkUtil;
 
+import java.awt.*;
+import java.io.IOException;
+import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -36,16 +46,22 @@ import java.util.function.Function;
 import static java.awt.Color.decode;
 
 public class Komendy {
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
     private final Weryfikacja weryfikacja;
     private final ManagerBazyDanych mbd;
+    private final EventWaiter eventWaiter;
     private NickJob nickJob;
 
-    public Komendy(Weryfikacja weryfikacja, ManagerBazyDanych mbd, JDA jda) {
+    public Komendy(Weryfikacja weryfikacja, ManagerBazyDanych mbd, JDA jda, EventWaiter eventWaiter) {
         this.weryfikacja = weryfikacja;
         this.mbd = mbd;
+        this.eventWaiter = eventWaiter;
         Guild fdev = jda.getGuildById(Config.instance.guildId);
         if (fdev == null) throw new NullPointerException();
         List<CommandData> adminCommands = new ArrayList<>();
+        List<SubcommandGroupData> adminSubCommands = new ArrayList<>();
+        List<CommandData> boosterCommands = new ArrayList<>();
         List<CommandData> allCommands = new ArrayList<>();
         allCommands.add(new CommandData("wersja", "Wersja bota"));
         if (Config.instance.funkcje.komendy.suffix) {
@@ -63,26 +79,59 @@ public class Komendy {
         if (Config.instance.funkcje.weryfikacja.zezwolNaZmianeNicku) {
             allCommands.add(new CommandData("nick", "Zmienia Twój nick na serwerze")
                     .addOption(OptionType.STRING, "nick", "Nowy nick (nie wypełniaj by usunąć)", false));
+            List<SubcommandData> subs = new ArrayList<>();
             if (Config.instance.funkcje.komendy.ustawNick) {
-                adminCommands.add(new CommandData("ustawnick", "Zmienia nick podanej osoby")
+                subs.add(new SubcommandData("ustaw", "Zmienia nick podanej osoby")
                         .addOption(OptionType.USER, "osoba", "Osoba", true)
                         .addOption(OptionType.STRING, "nick", "Nowy nick (nie wypełniaj by usunąć)", false));
             }
             if (Config.instance.funkcje.komendy.blacklistNick) {
-                adminCommands.add(new CommandData("blacklistnick", "Blokuje/odblokowuje możliwość zmiany nicku podanej osobie")
+                subs.add(new SubcommandData("blacklist", "Blokuje/odblokowuje możliwość zmiany nicku podanej osobie")
                         .addOption(OptionType.USER, "osoba", "Osoba", true));
             }
+            adminSubCommands.add(new SubcommandGroupData("nick", "Zarządzanie nickami").addSubcommands(subs));
         }
+        if (Config.instance.funkcje.customRole.wlaczone) {
+            Config.CustomRole customRole = Config.instance.funkcje.customRole;
+            if (!customRole.zezwolNaZmianeIkony && !customRole.zezwolNaZmianeKoloru) {
+                logger.error("CustomRole jest włączone, ale nie ma zezwolenia na zmianę ikony ani koloru: {}", customRole);
+            } else {
+                String desc;
+                if (customRole.zezwolNaZmianeKoloru && customRole.zezwolNaZmianeIkony) desc = "z kolorem i ikoną";
+                else if (customRole.zezwolNaZmianeKoloru) desc = "z kolorem";
+                else desc = "z ikoną";
+                boosterCommands.add(new CommandData("personalizacja", "Otwiera menu zmiany Twojej roli " + desc + "."));
+                List<SubcommandData> subs = new ArrayList<>();
+                if (Config.instance.funkcje.komendy.edytujRole) {
+                    subs.add(new SubcommandData("edytuj", "Otwiera menu edycji roli podanej osoby")
+                            .addOption(OptionType.USER, "osoba", "Osoba", true));
+                }
+                if (Config.instance.funkcje.komendy.usunRole) {
+                    subs.add(new SubcommandData("usun", "Usuwa rolę podanej osobie")
+                            .addOption(OptionType.USER, "osoba", "Osoba", true));
+                }
+                if (Config.instance.funkcje.komendy.blacklistRole) {
+                    subs.add(new SubcommandData("blacklist", "Blokuje podanej osobie możliwość personalizowania swojej roli")
+                            .addOption(OptionType.USER, "osoba", "Osoba", true));
+                }
+                adminSubCommands.add(new SubcommandGroupData("personalizacja", "Zarządzanie rolami personalizującymi").addSubcommands(subs));
+            }
+        }
+        adminCommands.add(new CommandData("admin", "Ogólna komenda administracyjna").addSubcommandGroups(adminSubCommands));
         adminCommands.forEach(c -> c.setDefaultEnabled(false));
-        List<Command> commands = fdev.updateCommands().addCommands(adminCommands).addCommands(allCommands).complete();
+        if (fdev.getBoostRole() == null) boosterCommands.clear();
+        boosterCommands.forEach(c -> c.setDefaultEnabled(false));
+        List<Command> commands = fdev.updateCommands().addCommands(adminCommands).addCommands(boosterCommands).addCommands(allCommands).complete();
         commands.stream().filter(c -> adminCommands.stream().anyMatch(d -> d.getName().equals(c.getName())))
                 .forEach(c -> c.updatePrivileges(fdev, CommandPrivilege.enableRole(Config.instance.role.admin)).complete());
+        commands.stream().filter(c -> boosterCommands.stream().anyMatch(d -> d.getName().equals(c.getName())))
+                .forEach(c -> c.updatePrivileges(fdev, CommandPrivilege.enable(fdev.getBoostRole())).complete());
     }
 
     @Subscribe
     @AllowConcurrentEvents
     public void onCommand(SlashCommandEvent e) {
-        switch (e.getName()) {
+        switch (e.getCommandPath()) {
             case "wersja": {
                 e.reply("FratikDev " + getClass().getPackage().getImplementationVersion()).setEphemeral(true).complete();
                 break;
@@ -211,7 +260,7 @@ public class Komendy {
                 e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
                 break;
             }
-            case "blacklistnick": {
+            case "admin/nick/blacklist": {
                 if (!Config.instance.funkcje.komendy.blacklistNick) {
                     e.reply("Funkcja została wyłączona w konfiguracji bota.").queue();
                     return;
@@ -242,7 +291,7 @@ public class Komendy {
                 e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
                 break;
             }
-            case "ustawnick": {
+            case "admin/nick/ustaw": {
                 if (!Config.instance.funkcje.komendy.ustawNick) {
                     e.reply("Funkcja została wyłączona w konfiguracji bota.").queue();
                     return;
@@ -291,9 +340,248 @@ public class Komendy {
                 e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
                 break;
             }
+            case "personalizacja":
+            case "admin/personalizacja/edytuj": {
+                boolean isAdmin = e.getCommandPath().equals("admin/personalizacja/edytuj");
+                if (!Config.instance.funkcje.customRole.wlaczone || (isAdmin && !Config.instance.funkcje.komendy.edytujRole)) {
+                    e.reply("Funkcja została wyłączona w konfiguracji bota.").queue();
+                    return;
+                }
+                e.deferReply(true).queue();
+                Member member;
+                if (isAdmin) member = e.getOption("osoba").getAsMember();
+                else member = e.getMember();
+                RoleData roleData = mbd.getRoleData(member.getUser());
+                if (roleData != null && roleData.isBlacklist()) {
+                    e.getHook().editOriginal(isAdmin ? "Ta osoba jest na blackliście." : "Jesteś na blackliście.").queue();
+                    return;
+                }
+                boolean boosted;
+                if (!Config.instance.funkcje.customRole.tylkoDlaBoosterow) boosted = false;
+                else boosted = e.getGuild().getBoostRole() == null || !member.getRoles().contains(e.getGuild().getBoostRole());
+                if (roleData == null && (!isAdmin && !boosted)) {
+                    e.getHook().editOriginal("Nie masz dostępu do tej funkcji. Boostnij serwer!").queue();
+                    return;
+                }
+                Role role;
+                if (roleData != null) role = e.getGuild().getRoleById(roleData.getRoleId());
+                else role = null;
+                if (role == null) {
+                    if (roleData != null) mbd.usunRole(member.getUser());
+                    if (!isAdmin && !boosted) {
+                        e.getHook().editOriginal("Nie masz dostępu do tej funkcji. Boostnij serwer!").queue();
+                        return;
+                    }
+                    role = e.getGuild().createRole().setName("Kosmetyka - " + member.getEffectiveName()).complete();
+                    e.getGuild().modifyRolePositions(false).selectPosition(role)
+                            .moveTo(Math.max(e.getGuild().getSelfMember().getRoles().get(0).getPositionRaw(),
+                                    e.getMember().getRoles().get(0).getPositionRaw() - 1)).queue();
+                    mbd.save(roleData = new RoleData(member.getId(), role.getId(), false, isAdmin ? RoleData.Type.UNKNOWN : RoleData.Type.BOOSTER));
+                }
+                e.getHook().editOriginal(renderRoleEmbed(roleData, role)).queue();
+                break;
+            }
+            case "admin/personalizacja/usun": {
+                if (!Config.instance.funkcje.komendy.usunRole) {
+                    e.reply("Funkcja została wyłączona w konfiguracji bota.").queue();
+                    return;
+                }
+                Member member = e.getOption("osoba").getAsMember();
+                if (member == null) {
+                    e.reply("Nie znaleziono takiej osoby.").setEphemeral(true).queue();
+                    return;
+                }
+                e.deferReply().queue();
+                RoleData roleData = mbd.getRoleData(member.getUser());
+                if (roleData == null) {
+                    e.getHook().editOriginal("Nie znaleziono danych roli dla tej osoby.").queue();
+                    return;
+                }
+                if (roleData.isBlacklist()) {
+                    e.getHook().editOriginal("Najpierw zdejmij blacklistę.").queue();
+                    return;
+                }
+                mbd.usunRole(member.getUser());
+                Role role = e.getGuild().getRoleById(roleData.getRoleId());
+                if (role == null) {
+                    e.getHook().editOriginal("Nie znaleziono danych roli dla tej osoby.").queue();
+                    return;
+                }
+                role.delete().queue();
+                e.getHook().editOriginal("Pomyślnie usunięto rolę.").queue();
+                break;
+            }
+            case "admin/personalizacja/blacklist": {
+                if (!Config.instance.funkcje.komendy.blacklistRole) {
+                    e.reply("Funkcja została wyłączona w konfiguracji bota.").queue();
+                    return;
+                }
+                Member mem = e.getOption("osoba").getAsMember();
+                if (mem == null) {
+                    e.reply("Nie znaleziono takiej osoby!").complete();
+                    return;
+                }
+                if (isAdmin(mem)) {
+                    e.reply("Nie można wrzucić na blacklistę administratora!").complete();
+                    return;
+                }
+                RoleData roleData = mbd.getRoleData(mem.getUser());
+                if (roleData != null) {
+                    mbd.usunRole(mem.getUser());
+                    Role role = e.getGuild().getRoleById(roleData.getRoleId());
+                    if (role != null) role.delete().queue();
+                }
+                mbd.save(new RoleData(mem.getId(), null, true, RoleData.Type.UNKNOWN));
+                break;
+            }
             default: {
                 throw new IllegalArgumentException("nieznana nazwa komendy: " + e.getName());
             }
+        }
+    }
+
+    private Message renderRoleEmbed(RoleData roleData, Role role) {
+        String za;
+        if (roleData.getType() == RoleData.Type.BOOSTER) za = " za boost serwera";
+        else if (roleData.getType() == RoleData.Type.REWARD) za = " jako nagrodę";
+        else za = "";
+        EmbedBuilder eb = new EmbedBuilder()
+                .setColor(role.getColor())
+                .setTitle("Zarządzanie rolą kosmetyczną")
+                .setDescription("Nazwa: " + role.getName() + "\nOtrzymano rolę " + new SimpleDateFormat("dd.MM.yyyy HH:mm:ss")
+                        .format(Date.from(role.getTimeCreated().toInstant())) + za + ".")
+                .setFooter(role.getId());
+        Boolean changeRoleIcon; // true - zmień, false - dodaj, null - brak możliwości
+        if (role.getGuild().getFeatures().contains("ROLE_ICONS")) {
+            if (role.getEmoji() != null) {
+                eb.addField("Ikona roli", role.getEmoji(), true);
+                changeRoleIcon = true;
+            } else if (role.getIconId() != null) {
+                eb.addField("Ikona roli", "jest wyświetlona w embedzie", true);
+                eb.setThumbnail(role.getIconUrl());
+                changeRoleIcon = true;
+            } else {
+                eb.addField("Ikona roli", "nie została ustawiona", true);
+                changeRoleIcon = false;
+            }
+        } else {
+            eb.addField("Ikona roli", "Serwer nie ma dostępu do ikon. Prawdopodobnie brakuje boostów.", false);
+            changeRoleIcon = null;
+        }
+        eb.addField("Kolor", role.getColor() == null ? "*brak*" : Integer.toString(role.getColorRaw(), 16), true);
+        eb.addField("Ostrzeżenie!", "Wciśnięcie przycisku spowoduje wysłanie widocznej dla wszystkich " +
+                "wiadomości na chacie. Upewnij się, że jesteś na kanale gdzie komendy są dozwolone.", false);
+        MessageBuilder mb = new MessageBuilder(eb.build());
+        List<Component> components = new ArrayList<>();
+        List<Component> components2 = new ArrayList<>();
+        if (changeRoleIcon != null) {
+            if (changeRoleIcon) { //NOSONAR
+                components.add(Button.primary("SET_ICON", "Zmień ikonę"));
+                components2.add(Button.danger("DELETE_ICON", "Usuń ikonę"));
+            } else components.add(Button.primary("SET_ICON", "Ustaw ikonę"));
+        }
+        if (role.getColor() != null) {
+            components.add(Button.primary("SET_COLOR", "Zmień kolor"));
+            components2.add(Button.danger("DELETE_COLOR", "Usuń kolor"));
+        } else components.add(Button.primary("SET_COLOR", "Ustaw kolor"));
+        mb.setActionRows(ActionRow.of(components));
+        return mb.build();
+    }
+
+    @Subscribe
+    @AllowConcurrentEvents
+    public void onButtonClick(@NotNull ButtonClickEvent e) {
+        if (!e.isFromGuild() || !e.getGuild().getId().equals(Config.instance.guildId)) return;
+        String roleId;
+        if (e.getMessage().getEmbeds().size() != 1) return;
+        MessageEmbed.Footer f = e.getMessage().getEmbeds().get(0).getFooter();
+        if (f == null) return;
+        roleId = f.getText();
+        if (roleId == null) return;
+        Role role;
+        try {
+            role = e.getGuild().getRoleById(roleId);
+        } catch (Exception ex) {
+            return;
+        }
+        if (role == null) return;
+        if (e.getComponentId().equals("SET_ICON")) {
+            MessageWaiter waiter = new MessageWaiter(eventWaiter, new MessageWaiter.Context(e.getUser(), e.getChannel()));
+            e.deferReply().queue();
+            waiter.setMessageHandler(m -> {
+                if (m.getMessage().getAttachments().isEmpty()) {
+                    try {
+                        //todo lepsza detekcja czy emotka XD
+                        if (m.getMessage().getContentRaw().length() > 4) throw new Exception("raczej nie emotka");
+                        role.getManager().setEmoji(m.getMessage().getContentRaw()).complete();
+                    } catch (Exception ex) {
+                        m.getMessage().reply("Twoja wiadomość nie zawiera załączników ani prawidłowej emotki.").queue();
+                        return;
+                    }
+                    m.getMessage().reply("Pomyślnie ustawiono emotkę roli.").queue();
+                } else {
+                    Message.Attachment attachment = m.getMessage().getAttachments().get(0);
+                    if (attachment.getSize() > 262144) {
+                        m.getMessage().reply("Za duży plik. Maksymalny rozmiar to 256KB.").queue();
+                        return;
+                    }
+                    Icon.IconType type;
+                    if (attachment.getFileExtension() == null) type = null;
+                    else if (attachment.getFileExtension().equals("jpg")) type = Icon.IconType.JPEG;
+                    else if (attachment.getFileExtension().equals("jpeg")) type = Icon.IconType.JPEG;
+                    else if (attachment.getFileExtension().equals("png")) type = Icon.IconType.PNG;
+                    else type = null;
+                    if (type == null) {
+                        m.getMessage().reply("Nie rozpoznano formatu. Musisz wysłać plik w formacie JPEG lub PNG.").queue();
+                        return;
+                    }
+                    byte[] bytes;
+                    try {
+                        bytes = NetworkUtil.download(attachment.getUrl());
+                    } catch (IOException ex) {
+                        logger.error("Pobieranko wyjebało", ex);
+                        m.getMessage().reply("Nie udało się pobrać załącznika. Spróbuj ponownie później.").queue();
+                        return;
+                    }
+                    try {
+                        role.getManager().setIcon(Icon.from(bytes, type)).complete();
+                    } catch (Exception ex) {
+                        logger.error("Nie udało się ustawić ikony", ex);
+                        m.getMessage().reply("Nie udało się ustawić ikony.").queue();
+                        return;
+                    }
+                    m.getMessage().reply("Pomyślnie zmieniono ikonę.").complete();
+                }
+            });
+            waiter.setTimeoutHandler(() -> e.getHook().editOriginal("Czas minął.").queue());
+            e.getHook().editOriginal("Wyślij zdjęcie lub emotkę unicode by zmienić ikonę swojej roli.").complete();
+            waiter.create();
+        }
+        if (e.getComponentId().equals("DELETE_ICON")) {
+            e.deferReply().queue();
+            role.getManager().setIcon(null).setEmoji(null).complete();
+            e.getHook().editOriginal("Pomyślnie usunięto ikonę.").queue();
+        }
+        if (e.getComponentId().equals("SET_COLOR")) {
+            MessageWaiter waiter = new MessageWaiter(eventWaiter, new MessageWaiter.Context(e.getUser(), e.getChannel()));
+            e.deferReply().queue();
+            waiter.setMessageHandler(m -> {
+                if (!m.getMessage().getContentRaw().toLowerCase().matches("^#[0-9a-f]{6}$")) {
+                    m.getMessage().reply("Nieprawidłowy format koloru.").queue();
+                    return;
+                }
+                Color color = Color.decode(m.getMessage().getContentRaw());
+                role.getManager().setColor(color).complete();
+                m.getMessage().reply("Pomyślnie zmieniono kolor.").complete();
+            });
+            waiter.setTimeoutHandler(() -> e.getHook().editOriginal("Czas minął.").queue());
+            e.getHook().editOriginal("Wyślij kolor w formacie #RRGGBB.").complete();
+            waiter.create();
+        }
+        if (e.getComponentId().equals("DELETE_COLOR")) {
+            e.deferReply().queue();
+            role.getManager().setColor(null).complete();
+            e.getHook().editOriginal("Pomyślnie usunięto kolor.").queue();
         }
     }
 
