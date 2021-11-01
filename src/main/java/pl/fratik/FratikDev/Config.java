@@ -1,5 +1,8 @@
 package pl.fratik.FratikDev;
 
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.TextChannel;
+
 @SuppressWarnings("CanBeFinal")
 public class Config {
     public static Config instance;
@@ -72,8 +75,12 @@ public class Config {
         public boolean tylkoDlaBoosterow = true;
         public boolean zezwolNaZmianeKoloru = true;
         public boolean zezwolNaZmianeIkony = true;
-        public boolean weryfikacjaAdministracyjna = true; // wkrótce
+        public String weryfikacjaAdministracyjna = null; // id kanału
         public boolean logi = true;
+
+        public TextChannel getWeryfikacjaAdministracyjna(JDA jda) {
+            return weryfikacjaAdministracyjna == null ? null : jda.getTextChannelById(weryfikacjaAdministracyjna);
+        }
     }
 
     public static class Weryfikacja {

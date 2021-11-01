@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateBoostTime
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.role.update.RoleUpdatePositionEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -29,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.Config;
-import pl.fratik.FratikDev.Main;
 import pl.fratik.FratikDev.entity.RoleData;
 import pl.fratik.FratikDev.entity.SuffixData;
 import pl.fratik.FratikDev.entity.WeryfikacjaInfo;
@@ -40,11 +40,11 @@ import pl.fratik.FratikDev.util.NetworkUtil;
 
 import java.awt.*;
 import java.io.IOException;
-import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 import static java.awt.Color.decode;
 
 public class Komendy {
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final Logger logger = LoggerFactory.getLogger(Komendy.class);
 
     private final Weryfikacja weryfikacja;
     private final ManagerBazyDanych mbd;
@@ -414,7 +414,23 @@ public class Komendy {
                     e.getHook().editOriginal("Nie znaleziono danych roli dla tej osoby.").queue();
                     return;
                 }
-                role.delete().queue();
+                try {
+                    role.delete().complete();
+                } catch (Exception ex) {
+                    e.getHook().editOriginal("Nie udało się usunąć roli.").queue();
+                    return;
+                }
+                try {
+                    EmbedBuilder eb = new EmbedBuilder();
+                    eb.setColor(decode("#00ff00"));
+                    eb.setAuthor("Usunięcie roli kosmetycznej");
+                    eb.setTimestamp(Instant.now());
+                    eb.setDescription("Usunięto rolę kosmetyczną");
+                    eb.addField("Rola", role.getAsMention() + " (" + role.getName() + ", " + role.getId() + ")", true);
+                    eb.addField("Usunięta przez", e.getUser().getAsMention() + " (" + e.getUser().getAsTag() + ", " +
+                            e.getUser().getId() + ")", true);
+                    e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
+                } catch (Exception ignored) {}
                 e.getHook().editOriginal("Pomyślnie usunięto rolę.").queue();
                 break;
             }
@@ -428,17 +444,46 @@ public class Komendy {
                     e.reply("Nie znaleziono takiej osoby!").complete();
                     return;
                 }
-                if (isAdmin(mem)) {
-                    e.reply("Nie można wrzucić na blacklistę administratora!").complete();
+                e.deferReply(true).queue();
+                RoleData roleData = mbd.getRoleData(mem.getUser());
+                if (roleData != null && roleData.isBlacklist()) {
+                    mbd.usunRole(mem.getUser());
+                    try {
+                        EmbedBuilder eb = new EmbedBuilder();
+                        eb.setColor(decode("#00ff00"));
+                        eb.setAuthor("Blacklista personalizacji");
+                        eb.setTimestamp(Instant.now());
+                        eb.setDescription("Usunięto użytkownika z blacklisty personalizacji");
+                        eb.addField("Użytkownik", mem.getAsMention() + " (" + mem.getUser().getAsTag() + ", " + mem.getId() + ")", true);
+                        eb.addField("Usunięty przez", e.getUser().getAsMention() + " (" + e.getUser().getAsTag() + ", " +
+                                e.getUser().getId() + ")", true);
+                        e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
+                    } catch (Exception ignored) {}
+                    e.getHook().editOriginal("Pomyślnie usunięto użytkownika z blacklisty!").queue();
                     return;
                 }
-                RoleData roleData = mbd.getRoleData(mem.getUser());
+                if (isAdmin(mem)) {
+                    e.getHook().editOriginal("Nie można wrzucić na blacklistę administratora!").queue();
+                    return;
+                }
                 if (roleData != null) {
                     mbd.usunRole(mem.getUser());
                     Role role = e.getGuild().getRoleById(roleData.getRoleId());
                     if (role != null) role.delete().queue();
                 }
                 mbd.save(new RoleData(mem.getId(), null, true, RoleData.Type.UNKNOWN));
+                try {
+                    EmbedBuilder eb = new EmbedBuilder();
+                    eb.setColor(decode("#00ff00"));
+                    eb.setAuthor("Blacklista personalizacji");
+                    eb.setTimestamp(Instant.now());
+                    eb.setDescription("Dodano użytkownika na blacklistę personalizacji");
+                    eb.addField("Użytkownik", mem.getAsMention() + " (" + mem.getUser().getAsTag() + ", " + mem.getId() + ")", true);
+                    eb.addField("Dodany przez", e.getUser().getAsMention() + " (" + e.getUser().getAsTag() + ", " +
+                            e.getUser().getId() + ")", true);
+                    e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
+                } catch (Exception ignored) {}
+                e.getHook().editOriginal("Pomyślnie dodano użytkownika na blacklistę!").queue();
                 break;
             }
             default: {
@@ -501,23 +546,38 @@ public class Komendy {
                         .format(Date.from(role.getTimeCreated().toInstant())) + za + ".")
                 .setFooter(role.getId());
         Boolean changeRoleIcon; // true - zmień, false - dodaj, null - brak możliwości
-        if (role.getGuild().getFeatures().contains("ROLE_ICONS")) {
-            if (role.getEmoji() != null) {
-                eb.addField("Ikona roli", role.getEmoji(), true);
-                changeRoleIcon = true;
-            } else if (role.getIconId() != null) {
-                eb.addField("Ikona roli", "jest wyświetlona w embedzie", true);
-                eb.setThumbnail(role.getIconUrl());
-                changeRoleIcon = true;
+        Boolean changeRoleColor; // true - zmień, false - dodaj, null - brak możliwości
+        if (Config.instance.funkcje.customRole.zezwolNaZmianeIkony) {
+            if (role.getGuild().getFeatures().contains("ROLE_ICONS")) {
+                if (role.getIconId() != null) {
+                    eb.addField("Ikona roli", "jest wyświetlona w embedzie", true);
+                    eb.setThumbnail(role.getIconUrl());
+                    changeRoleIcon = true;
+                } else if (role.getEmoji() != null) {
+                    eb.addField("Ikona roli", role.getEmoji(), true);
+                    changeRoleIcon = true;
+                } else {
+                    eb.addField("Ikona roli", "nie została ustawiona", true);
+                    changeRoleIcon = false;
+                }
             } else {
-                eb.addField("Ikona roli", "nie została ustawiona", true);
-                changeRoleIcon = false;
+                eb.addField("Ikona roli", "Serwer nie ma dostępu do ikon. Prawdopodobnie brakuje boostów.", false);
+                changeRoleIcon = null;
+            }
+        } else changeRoleIcon = null;
+        if (Config.instance.funkcje.customRole.zezwolNaZmianeKoloru) {
+            if (role.getColor() == null) {
+                eb.addField("Kolor", "*brak*", true);
+                changeRoleColor = false;
+            } else {
+                eb.addField("Kolor", "#" + String.format("%06x", role.getColorRaw()), true);
+                changeRoleColor = true;
             }
         } else {
-            eb.addField("Ikona roli", "Serwer nie ma dostępu do ikon. Prawdopodobnie brakuje boostów.", false);
-            changeRoleIcon = null;
+            if (changeRoleIcon == null)
+                return new MessageBuilder("Obecnie nie możesz zmienić żadnej opcji w swojej roli kosmetycznej.").build();
+            changeRoleColor = null;
         }
-        eb.addField("Kolor", role.getColor() == null ? "*brak*" : String.format("%06x", role.getColorRaw()), true);
         eb.addField("Ostrzeżenie!", "Wciśnięcie przycisku spowoduje wysłanie widocznej dla wszystkich " +
                 "wiadomości na chacie. Upewnij się, że jesteś na kanale gdzie komendy są dozwolone.", false);
         MessageBuilder mb = new MessageBuilder(eb.build());
@@ -529,10 +589,12 @@ public class Komendy {
                 components2.add(Button.danger("DELETE_ICON", "Usuń ikonę"));
             } else components.add(Button.primary("SET_ICON", "Ustaw ikonę"));
         }
-        if (role.getColor() != null) {
-            components.add(Button.primary("SET_COLOR", "Zmień kolor"));
-            components2.add(Button.danger("DELETE_COLOR", "Usuń kolor"));
-        } else components.add(Button.primary("SET_COLOR", "Ustaw kolor"));
+        if (changeRoleColor != null) {
+            if (changeRoleColor) { //NOSONAR
+                components.add(Button.primary("SET_COLOR", "Zmień kolor"));
+                components2.add(Button.danger("DELETE_COLOR", "Usuń kolor"));
+            } else components.add(Button.primary("SET_COLOR", "Ustaw kolor"));
+        }
         List<ActionRow> rows = new ArrayList<>();
         rows.add(ActionRow.of(components));
         if (!components2.isEmpty()) rows.add(ActionRow.of(components2));
@@ -626,7 +688,7 @@ public class Komendy {
             return;
         }
         if (role == null) return;
-        if (e.getComponentId().equals("SET_ICON")) {
+        if (e.getComponentId().equals("SET_ICON") && Config.instance.funkcje.customRole.zezwolNaZmianeIkony) {
             MessageWaiter waiter = new MessageWaiter(eventWaiter, new MessageWaiter.Context(e.getUser(), e.getChannel()));
             e.deferReply().queue();
             waiter.setMessageHandler(m -> {
@@ -639,6 +701,18 @@ public class Komendy {
                         m.getMessage().reply("Twoja wiadomość nie zawiera załączników ani prawidłowej emotki.").queue();
                         return;
                     }
+                    try {
+                        EmbedBuilder eb = new EmbedBuilder();
+                        eb.setColor(decode("#00ff00"));
+                        eb.setAuthor("Zmiana ikony roli");
+                        eb.setTimestamp(Instant.now());
+                        eb.setDescription("Ustawiono ikonę roli");
+                        eb.addField("Rola", role.getAsMention() + " (" + role.getName() + ", " + role.getId() + ")", true);
+                        eb.addField("Nowa ikona", m.getMessage().getContentRaw(), true);
+                        eb.addField("Ustawiona przez", m.getAuthor().getAsMention() + " (" + m.getAuthor().getAsTag() + ", " +
+                                m.getAuthor().getId() + ")", true);
+                        e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
+                    } catch (Exception ignored) {}
                     m.getMessage().reply("Pomyślnie ustawiono emotkę roli.").queue();
                 } else {
                     Message.Attachment attachment = m.getMessage().getAttachments().get(0);
@@ -664,6 +738,29 @@ public class Komendy {
                         m.getMessage().reply("Nie udało się pobrać załącznika. Spróbuj ponownie później.").queue();
                         return;
                     }
+                    TextChannel weryfChan = Config.instance.funkcje.customRole.getWeryfikacjaAdministracyjna(e.getJDA());
+                    if (weryfChan != null) {
+                        try {
+                            EmbedBuilder eb = new EmbedBuilder()
+                                    .setTitle("Weryfikacja ikony roli")
+                                    .setAuthor(m.getAuthor().getAsTag(), null, m.getAuthor().getEffectiveAvatarUrl())
+                                    .setImage("attachment://ikona." + attachment.getFileExtension())
+                                    .setFooter(role.getId());
+                            weryfChan.sendMessage(new MessageBuilder(eb.build())
+                                            .setActionRows(ActionRow.of(
+                                                    Button.success("ICON_ACCEPT", "Zatwierdź"),
+                                                    Button.danger("ICON_REJECT", "Odrzuć")
+                                            )).build()
+                                    ).addFile(bytes, "ikona." + attachment.getFileExtension())
+                                    .complete();
+                        } catch (ErrorResponseException ex) {
+                            m.getMessage().reply("Nie udało się wysłać ikony na kanał administracyjny. Zgłoś to administracji serwera.").queue();
+                            return;
+                        }
+                        m.getMessage().reply("Załącznik został wysłany na kanał administracyjny w celu weryfikacji. " +
+                                "Po pomyślnej weryfikacji, Twoja rola zmieni ikonę.").queue();
+                        return;
+                    }
                     try {
                         role.getManager().setIcon(Icon.from(bytes, type)).complete();
                     } catch (Exception ex) {
@@ -671,19 +768,96 @@ public class Komendy {
                         m.getMessage().reply("Nie udało się ustawić ikony.").queue();
                         return;
                     }
+                    try {
+                        EmbedBuilder eb = new EmbedBuilder();
+                        eb.setColor(decode("#00ff00"));
+                        eb.setAuthor("Zmiana ikony roli");
+                        eb.setTimestamp(Instant.now());
+                        eb.setDescription("Ustawiono ikonę roli");
+                        eb.setImage("attachment://ikona." + attachment.getFileExtension());
+                        eb.addField("Rola", role.getAsMention() + " (" + role.getName() + ", " + role.getId() + ")", true);
+                        eb.addField("Nowa ikona", "została wstawiona jako załącznik do embeda", true);
+                        eb.addField("Ustawiona przez", m.getAuthor().getAsMention() + " (" + m.getAuthor().getAsTag() + ", " +
+                                m.getAuthor().getId() + ")\nIkona nie została wysłana do zatwierdzenia.", true);
+                        e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build())
+                                .addFile(bytes, "ikona." + attachment.getFileExtension()).queue();
+                    } catch (Exception ignored) {}
                     m.getMessage().reply("Pomyślnie zmieniono ikonę.").complete();
                 }
             });
-            waiter.setTimeoutHandler(() -> e.getHook().editOriginal("Czas minął.").queue());
-            e.getHook().editOriginal("Wyślij zdjęcie lub emotkę unicode by zmienić ikonę swojej roli.").complete();
+            waiter.setTimeoutHandler(() -> e.getHook().editOriginal(e.getUser().getAsMention() + ": czas minął.").queue());
+            e.getHook().editOriginal(e.getUser().getAsMention() + ": wyślij zdjęcie lub emotkę unicode by zmienić ikonę swojej roli.").complete();
             waiter.create();
         }
-        if (e.getComponentId().equals("DELETE_ICON")) {
+        if (e.getComponentId().equals("DELETE_ICON") && Config.instance.funkcje.customRole.zezwolNaZmianeIkony) {
             e.deferReply().queue();
             role.getManager().setIcon(null).setEmoji(null).complete();
-            e.getHook().editOriginal("Pomyślnie usunięto ikonę.").queue();
+            try {
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setColor(decode("#00ff00"));
+                eb.setAuthor("Zmiana ikony roli");
+                eb.setTimestamp(Instant.now());
+                eb.setDescription("Usunięto ikonę roli");
+                eb.addField("Rola", role.getAsMention() + " (" + role.getName() + ", " + role.getId() + ")", true);
+                eb.addField("Usunięta przez", e.getUser().getAsMention() + " (" + e.getUser().getAsTag() + ", " +
+                        e.getUser().getId() + ")", true);
+                e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
+            } catch (Exception ignored) {}
+            e.getHook().editOriginal(e.getUser().getAsMention() + ": pomyślnie usunięto ikonę.").queue();
         }
-        if (e.getComponentId().equals("SET_COLOR")) {
+        if (e.getComponentId().equals("ICON_ACCEPT") && e.getChannel().equals(Config.instance.funkcje.customRole
+                .getWeryfikacjaAdministracyjna(e.getJDA()))) {
+            if (e.getMessage().getEmbeds().size() != 1) return;
+            MessageEmbed embed = e.getMessage().getEmbeds().get(0);
+            if (embed.getImage() == null || embed.getImage().getUrl() == null) return;
+            Icon.IconType type;
+            if (embed.getImage().getUrl().endsWith("ikona.jpg") || embed.getImage().getUrl().endsWith("ikona.jpeg")) type = Icon.IconType.JPEG;
+            else if (embed.getImage().getUrl().endsWith("ikona.png")) type = Icon.IconType.PNG;
+            else return;
+            e.deferReply(true).queue();
+            byte[] bytes;
+            try {
+                bytes = NetworkUtil.download(embed.getImage().getUrl());
+            } catch (IOException ex) {
+                logger.error("Pobieranko wyjebało", ex);
+                e.getHook().editOriginal("Nie udało się pobrać załącznika. Spróbuj ponownie później.").queue();
+                return;
+            }
+            try {
+                role.getManager().setIcon(Icon.from(bytes, type)).complete();
+            } catch (Exception ex) {
+                logger.error("Nie udało się ustawić ikony", ex);
+                e.getHook().editOriginal("Nie udało się ustawić ikony.").queue();
+                return;
+            }
+            e.getMessage().delete().queue();
+            try {
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setColor(decode("#00ff00"));
+                eb.setAuthor("Zmiana ikony roli");
+                eb.setTimestamp(Instant.now());
+                eb.setDescription("Ustawiono ikonę roli");
+                String ext = type == Icon.IconType.PNG ? "png" : "jpg";
+                eb.setImage("attachment://ikona." + ext);
+                eb.addField("Rola", role.getAsMention() + " (" + role.getName() + ", " + role.getId() + ")", true);
+                eb.addField("Nowa ikona", "została wstawiona jako załącznik do embeda", true);
+                eb.addField("Zatwierdzona przez", e.getUser().getAsMention() + " (" + e.getUser().getAsTag() + ", " +
+                        e.getUser().getId() + ")", true);
+                e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build())
+                        .addFile(bytes, "ikona." + ext).queue();
+            } catch (Exception ignored) {}
+            e.getHook().editOriginal("Pomyślnie zmieniono ikonę.").complete();
+        }
+        if (e.getComponentId().equals("ICON_REJECT") && e.getChannel().equals(Config.instance.funkcje.customRole
+                .getWeryfikacjaAdministracyjna(e.getJDA()))) {
+            if (e.getMessage().getEmbeds().size() != 1) return;
+            MessageEmbed embed = e.getMessage().getEmbeds().get(0);
+            if (embed.getImage() == null || embed.getImage().getUrl() == null) return;
+            e.deferReply(true).queue();
+            e.getMessage().delete().queue();
+            e.getHook().editOriginal("Pomyślnie odrzucono zmianę ikony.").queue();
+        }
+        if (e.getComponentId().equals("SET_COLOR") && Config.instance.funkcje.customRole.zezwolNaZmianeKoloru) {
             MessageWaiter waiter = new MessageWaiter(eventWaiter, new MessageWaiter.Context(e.getUser(), e.getChannel()));
             e.deferReply().queue();
             waiter.setMessageHandler(m -> {
@@ -693,16 +867,40 @@ public class Komendy {
                 }
                 Color color = Color.decode(m.getMessage().getContentRaw());
                 role.getManager().setColor(color).complete();
+                try {
+                    EmbedBuilder eb = new EmbedBuilder();
+                    eb.setColor(decode("#00ff00"));
+                    eb.setAuthor("Zmiana koloru roli");
+                    eb.setTimestamp(Instant.now());
+                    eb.setDescription("Zmieniono kolor roli kosmetycznej");
+                    eb.addField("Rola", role.getAsMention() + " (" + role.getName() + ", " + role.getId() + ")", true);
+                    eb.addField("Nowy kolor", "#" + String.format("%06x", color.getRGB() & 0xFFFFFF), true);
+                    eb.addField("Zmieniono przez", m.getAuthor().getAsMention() + " (" + m.getAuthor().getAsTag() + ", " +
+                            m.getAuthor().getId() + ")", true);
+                    e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
+                } catch (Exception ignored) {}
                 m.getMessage().reply("Pomyślnie zmieniono kolor.").complete();
             });
-            waiter.setTimeoutHandler(() -> e.getHook().editOriginal("Czas minął.").queue());
-            e.getHook().editOriginal("Wyślij kolor w formacie #RRGGBB.").complete();
+            waiter.setTimeoutHandler(() -> e.getHook().editOriginal(e.getUser().getAsMention() + ": czas minął.").queue());
+            e.getHook().editOriginal(e.getUser().getAsMention() + ": wyślij kolor w formacie #RRGGBB.").complete();
             waiter.create();
         }
-        if (e.getComponentId().equals("DELETE_COLOR")) {
+        if (e.getComponentId().equals("DELETE_COLOR") && Config.instance.funkcje.customRole.zezwolNaZmianeKoloru) {
             e.deferReply().queue();
             role.getManager().setColor(null).complete();
-            e.getHook().editOriginal("Pomyślnie usunięto kolor.").queue();
+            try {
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setColor(decode("#00ff00"));
+                eb.setAuthor("Zmiana koloru roli");
+                eb.setTimestamp(Instant.now());
+                eb.setDescription("Zresetowano kolor roli kosmetycznej");
+                eb.addField("Rola", role.getAsMention() + " (" + role.getName() + ", " + role.getId() + ")", true);
+                eb.addField("Nowy kolor", "*brak*", true);
+                eb.addField("Usunięto przez", e.getUser().getAsMention() + " (" + e.getUser().getAsTag() + ", " +
+                        e.getUser().getId() + ")", true);
+                e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
+            } catch (Exception ignored) {}
+            e.getHook().editOriginal(e.getUser().getAsMention() + ": pomyślnie usunięto kolor.").queue();
         }
     }
 
