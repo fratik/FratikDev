@@ -6,8 +6,14 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
+import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateBoostTimeEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.role.update.RoleUpdatePositionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -18,6 +24,7 @@ import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.Component;
+import net.dv8tion.jda.api.requests.restaction.order.RoleOrderAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +49,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.awt.Color.decode;
 
@@ -100,7 +108,7 @@ public class Komendy {
                 if (customRole.zezwolNaZmianeKoloru && customRole.zezwolNaZmianeIkony) desc = "z kolorem i ikoną";
                 else if (customRole.zezwolNaZmianeKoloru) desc = "z kolorem";
                 else desc = "z ikoną";
-                boosterCommands.add(new CommandData("personalizacja", "Otwiera menu zmiany Twojej roli " + desc + "."));
+                allCommands.add(new CommandData("personalizacja", "Otwiera menu zmiany Twojej roli " + desc + "."));
                 List<SubcommandData> subs = new ArrayList<>();
                 if (Config.instance.funkcje.komendy.edytujRole) {
                     subs.add(new SubcommandData("edytuj", "Otwiera menu edycji roli podanej osoby")
@@ -358,7 +366,7 @@ public class Komendy {
                 }
                 boolean boosted;
                 if (!Config.instance.funkcje.customRole.tylkoDlaBoosterow) boosted = false;
-                else boosted = e.getGuild().getBoostRole() == null || !member.getRoles().contains(e.getGuild().getBoostRole());
+                else boosted = e.getGuild().getBoostRole() == null || member.getRoles().contains(e.getGuild().getBoostRole());
                 if (roleData == null && (!isAdmin && !boosted)) {
                     e.getHook().editOriginal("Nie masz dostępu do tej funkcji. Boostnij serwer!").queue();
                     return;
@@ -373,9 +381,8 @@ public class Komendy {
                         return;
                     }
                     role = e.getGuild().createRole().setName("Kosmetyka - " + member.getEffectiveName()).complete();
-                    e.getGuild().modifyRolePositions(false).selectPosition(role)
-                            .moveTo(Math.max(e.getGuild().getSelfMember().getRoles().get(0).getPositionRaw(),
-                                    e.getMember().getRoles().get(0).getPositionRaw() - 1)).queue();
+                    e.getGuild().addRoleToMember(e.getMember(), role).queue();
+                    fixRolePosition(role, e.getMember());
                     mbd.save(roleData = new RoleData(member.getId(), role.getId(), false, isAdmin ? RoleData.Type.UNKNOWN : RoleData.Type.BOOSTER));
                 }
                 e.getHook().editOriginal(renderRoleEmbed(roleData, role)).queue();
@@ -440,6 +447,48 @@ public class Komendy {
         }
     }
 
+    private void fixRolePosition(Role role, Member member) {
+        Role memberHighestRole = null; // null jeżeli brak (@everyone) lub role == memberHighestRole (wtedy ustaw pos na 0)
+        List<String> allRoleIds = mbd.getAllRoleData().stream().map(RoleData::getRoleId).collect(Collectors.toList());
+        if (!member.getRoles().isEmpty() && !(member.getRoles().size() == 1 && member.getRoles().get(0).equals(role))) {
+            // jeżeli lista ról nie jest pusta i jedyną rolą użytkownika nie jest rola kosmetyczna
+            List<Role> roles = new ArrayList<>();
+            for (Role guildRole : member.getGuild().getRoles()) {
+                // filtrujemy role — bierzemy tylko naszą rolę kosmetyczną i wszystkie nie-kosmetyczne
+                if (guildRole.equals(role) || !allRoleIds.contains(guildRole.getId())) roles.add(guildRole);
+            }
+            for (Role memberRole : member.getRoles()) {
+                if (!memberRole.equals(role)) {
+                    // zapisujemy najwyższą rolę członka jako rolę pod kosmetyczną
+                    // to nigdy nie może być null, bo wyżej sprawdzamy czy jedyną rolą przypadkiem nie jest rola kosmetyczna
+                    memberHighestRole = memberRole;
+                    break;
+                }
+            }
+            if (memberHighestRole == null) throw new IllegalStateException("jeżeli to jest w logach to coś poważnie wyjebało");
+            if (roles.indexOf(role) + 1 == roles.indexOf(memberHighestRole)) {
+                // nie licząc ról innych kosmetycznych, nasza kosmetyczna jest centralnie nad naszą najwyższą rolą,
+                // czyli nic nie trzeba więcej modyfikować
+                return;
+            }
+        } else {
+            // tu trzeba sprawdzić, czy nasza cudowna kosmetyczna jest nad @eve
+            List<Role> roles = new ArrayList<>();
+            for (Role guildRole : member.getGuild().getRoles()) {
+                // filtrujemy role — bierzemy tylko naszą rolę kosmetyczną i wszystkie nie-kosmetyczne
+                if (guildRole.equals(role) || !allRoleIds.contains(guildRole.getId())) roles.add(guildRole);
+            }
+            if (roles.indexOf(role) + 1 == roles.size() - 1) {
+                // nie licząc ról innych kosmetycznych, nasza kosmetyczna jest centralnie nad @everyone,
+                // czyli nic nie trzeba więcej modyfikować
+                return;
+            }
+        }
+        RoleOrderAction orderAction = role.getGuild().modifyRolePositions(true).selectPosition(role);
+        orderAction.moveTo(Math.min(orderAction.getCurrentOrder().indexOf(role.getGuild().getSelfMember().getRoles().get(0)) - 1,
+                memberHighestRole == null ? 0 : (orderAction.getCurrentOrder().indexOf(memberHighestRole) + 1))).queue();
+    }
+
     private Message renderRoleEmbed(RoleData roleData, Role role) {
         String za;
         if (roleData.getType() == RoleData.Type.BOOSTER) za = " za boost serwera";
@@ -468,7 +517,7 @@ public class Komendy {
             eb.addField("Ikona roli", "Serwer nie ma dostępu do ikon. Prawdopodobnie brakuje boostów.", false);
             changeRoleIcon = null;
         }
-        eb.addField("Kolor", role.getColor() == null ? "*brak*" : Integer.toString(role.getColorRaw(), 16), true);
+        eb.addField("Kolor", role.getColor() == null ? "*brak*" : String.format("%06x", role.getColorRaw()), true);
         eb.addField("Ostrzeżenie!", "Wciśnięcie przycisku spowoduje wysłanie widocznej dla wszystkich " +
                 "wiadomości na chacie. Upewnij się, że jesteś na kanale gdzie komendy są dozwolone.", false);
         MessageBuilder mb = new MessageBuilder(eb.build());
@@ -484,8 +533,80 @@ public class Komendy {
             components.add(Button.primary("SET_COLOR", "Zmień kolor"));
             components2.add(Button.danger("DELETE_COLOR", "Usuń kolor"));
         } else components.add(Button.primary("SET_COLOR", "Ustaw kolor"));
-        mb.setActionRows(ActionRow.of(components));
+        List<ActionRow> rows = new ArrayList<>();
+        rows.add(ActionRow.of(components));
+        if (!components2.isEmpty()) rows.add(ActionRow.of(components2));
+        mb.setActionRows(rows);
         return mb.build();
+    }
+
+    @Subscribe
+    @AllowConcurrentEvents
+    public void onUnboost(GuildMemberUpdateBoostTimeEvent e) {
+        if (e.getNewTimeBoosted() != null) return;
+        RoleData roleData = mbd.getRoleData(e.getUser());
+        if (roleData == null || roleData.isBlacklist()) return;
+        if (roleData.getType() == RoleData.Type.BOOSTER) {
+            Role role = e.getGuild().getRoleById(roleData.getRoleId());
+            if (role != null) role.delete().queue();
+            mbd.usunRole(e.getUser());
+        }
+    }
+
+    @Subscribe
+    @AllowConcurrentEvents
+    public void onLeave(GuildMemberRemoveEvent e) {
+        RoleData roleData = mbd.getRoleData(e.getUser());
+        if (roleData == null || roleData.isBlacklist()) return;
+        if (roleData.getType() == RoleData.Type.BOOSTER) {
+            Role role = e.getGuild().getRoleById(roleData.getRoleId());
+            if (role != null) role.delete().queue();
+            mbd.usunRole(e.getUser());
+        }
+    }
+
+    @Subscribe
+    @AllowConcurrentEvents
+    public void onJoin(GuildMemberJoinEvent e) {
+        RoleData roleData = mbd.getRoleData(e.getUser());
+        if (roleData == null || roleData.isBlacklist()) return;
+        if (roleData.getType() != RoleData.Type.BOOSTER) {
+            Role role = e.getGuild().getRoleById(roleData.getRoleId());
+            if (role == null) return;
+            e.getGuild().addRoleToMember(e.getMember(), role).queue();
+            fixRolePosition(role, e.getMember());
+        }
+    }
+
+    @Subscribe
+    @AllowConcurrentEvents
+    public void onRolePosChange(RoleUpdatePositionEvent e) {
+        if (e.getOldPosition() == e.getNewPosition()) return;
+        if (!mbd.getRoleDataByRole(e.getRole()).isEmpty()) return;
+        for (Member member : e.getGuild().getMembersWithRoles(e.getRole())) {
+            RoleData roleData = mbd.getRoleData(member.getUser());
+            if (roleData == null || roleData.isBlacklist()) return;
+            Role role = e.getGuild().getRoleById(roleData.getRoleId());
+            if (role != null) fixRolePosition(role, member);
+        }
+    }
+
+    @Subscribe
+    @AllowConcurrentEvents
+    public void onRoleAdd(GuildMemberRoleAddEvent e) {
+        RoleData roleData = mbd.getRoleData(e.getMember().getUser());
+        if (roleData == null || roleData.isBlacklist()) return;
+        Role role = e.getGuild().getRoleById(roleData.getRoleId());
+        if (role != null) fixRolePosition(role, e.getMember());
+    }
+
+    @Subscribe
+    @AllowConcurrentEvents
+    public void onRoleRemove(GuildMemberRoleRemoveEvent e) {
+        RoleData roleData = mbd.getRoleData(e.getMember().getUser());
+        if (roleData == null || roleData.isBlacklist()) return;
+        Role role = e.getGuild().getRoleById(roleData.getRoleId());
+        if (role != null) fixRolePosition(role, e.getMember());
     }
 
     @Subscribe

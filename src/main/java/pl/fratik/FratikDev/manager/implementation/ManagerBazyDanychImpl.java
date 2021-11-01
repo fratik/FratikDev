@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.amy.pgorm.PgStore;
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -64,6 +65,16 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
     }
 
     @Override
+    public List<RoleData> getRoleDataByRole(Role role) {
+        return pgStore.mapSync(RoleData.class).loadManyBySubkey("data->>'roleId'", role.getId());
+    }
+
+    @Override
+    public List<RoleData> getAllRoleData() {
+        return pgStore.mapSync(RoleData.class).loadAll();
+    }
+
+    @Override
     public void usunRole(User user) {
         usunRole(user.getId());
     }
@@ -105,6 +116,7 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
         if (entity instanceof Urlop) save((Urlop) entity);
         if (entity instanceof WeryfikacjaInfo) save((WeryfikacjaInfo) entity);
         if (entity instanceof SuffixData) save((SuffixData) entity);
+        if (entity instanceof RoleData) save((RoleData) entity);
     }
 
     private void save(@NotNull Urlop config) {
@@ -117,6 +129,10 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
 
     private void save(@NotNull SuffixData config) {
         pgStore.mapSync(SuffixData.class).save(config);
+    }
+
+    private void save(@NotNull RoleData config) {
+        pgStore.mapSync(RoleData.class).save(config);
     }
 
 }
