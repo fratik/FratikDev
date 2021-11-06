@@ -71,7 +71,7 @@ public class Weryfikacja {
                 dzisiaj = Date.from(cal.toInstant());
                 for (Member mem : jda.getGuildById(Config.instance.guildId).getMembers().stream()
                         .filter(m -> m.getRoles().contains(jda.getRoleById(Config.instance.role.rolaUzytkownika)) &&
-                                !m.getUser().isBot() && (Config.instance.funkcje.weryfikacja.zabierajBoosterom || m.getTimeBoosted() != null))
+                                !m.getUser().isBot() && (!Config.instance.funkcje.weryfikacja.zabierajBoosterom || m.getTimeBoosted() == null))
                         .collect(Collectors.toList())) {
                     WeryfikacjaInfo weryfikacjaInfo = managerBazyDanych.getWeryfikacja(mem.getUser());
                     if (weryfikacjaInfo == null) {
