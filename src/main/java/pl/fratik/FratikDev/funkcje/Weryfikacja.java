@@ -9,11 +9,11 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.user.update.UserUpdateAvatarEvent;
 import net.dv8tion.jda.api.events.user.update.UserUpdateNameEvent;
-import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.slf4j.LoggerFactory;
 import pl.fratik.FratikDev.Config;
@@ -137,7 +137,7 @@ public class Weryfikacja {
                         false);
                 if (!f2sb.toString().isEmpty()) eb.addField("...z powodu braku danych:", f2sb.toString(), false);
                 if (!f1sb.toString().isEmpty() || !f2sb.toString().isEmpty())
-                    jda.getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
+                    jda.getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
                 intervalLock = false;
             } catch (Exception t) {
                 LoggerFactory.getLogger(Weryfikacja.class).error("coś nie pykło", t);
@@ -177,11 +177,10 @@ public class Weryfikacja {
 
     @Subscribe
     @AllowConcurrentEvents
-    public void onMessageReactionAdd(ButtonClickEvent e) {
+    public void onMessageReactionAdd(ButtonInteractionEvent e) {
         if (!e.getChannel().getId().equals(Config.instance.kanaly.zatwierdzRegulamin)) return;
         if (e.getUser().equals(e.getJDA().getSelfUser())) return;
-        Message m = e.getChannel().retrieveMessageById(e.getMessageId()).complete();
-        if (!m.getId().equals(Config.instance.wiadomosci.zatwierdzRegulaminWiadomoscBota)) return;
+        if (!e.getMessageId().equals(Config.instance.wiadomosci.zatwierdzRegulaminWiadomoscBota)) return;
         Member member = e.getMember();
         if (e.getComponentId().equals("ACCEPT")) {
             //#region daty
@@ -275,7 +274,7 @@ public class Weryfikacja {
             if (wymuszoneOdblokowanie) eb.addField("Odblokowanie zostalo wymuszone", "Osoba nie powinna być wpuszczona!", false);
             if (data.getIleRazy() == 1) eb.addField("Ilość weryfikacji", "Jest to pierwsza weryfikacja tego użytkownika.", false);
             else eb.addField("Ilość weryfikacji", "Jest to " + data.getIleRazy() + " weryfikacja tego użytkownika.", false);
-            e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
+            e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
         }
         if (e.getComponentId().equals("REJECT")) {
             e.deferEdit().queue();
@@ -288,7 +287,7 @@ public class Weryfikacja {
             eb.setDescription("Osoba " + e.getUser().getAsMention() + " nie zatwierdzila regulaminu.");
             eb.addField("Data dołączenia na Discorda", new SimpleDateFormat("dd.MM.yyyy HH:mm:ss")
                     .format(Date.from(e.getUser().getTimeCreated().toInstant())), false);
-            e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).complete();
+            e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).complete();
         }
     }
 
@@ -334,7 +333,7 @@ public class Weryfikacja {
         eb.setDescription("Zabrano rolę " + e.getUser().getAsMention() + " za zmianę nicku");
         eb.addField("Stary nick", e.getOldName(), true);
         eb.addField("Nowy nick", e.getNewName(), true);
-        e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).complete();
+        e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).complete();
     }
 
     @Subscribe
@@ -365,7 +364,7 @@ public class Weryfikacja {
             eb.setImage("attachment://avatary.png");
         } catch (Exception ignored) {
         }
-        MessageAction akcja = e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build());
+        MessageAction akcja = e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build());
         if (img.length != 0)
             akcja.addFile(img, "avatary.png").complete();
         else akcja.complete();

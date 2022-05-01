@@ -44,6 +44,12 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
     }
 
     @Override
+    public Urlop getUrlopByMessageId(String id) {
+        List<Urlop> data = pgStore.mapSync(Urlop.class).loadManyBySubkey("data->'messageId'", id);
+        return data.isEmpty() ? null : data.get(0);
+    }
+
+    @Override
     public SuffixData getSuffix(Guild guild) {
         return pgStore.mapSync(SuffixData.class).load(guild.getId()).orElse(null);
     }

@@ -3,16 +3,16 @@ import net.nemerosa.versioning.ReleaseInfo
 plugins {
     id 'java'
     id "io.freefair.lombok" version "6.2.0"
-    id "com.github.johnrengelman.shadow" version "7.1.0"
+    id "com.github.johnrengelman.shadow" version "7.1.2"
     id 'net.nemerosa.versioning' version '2.15.1'
 }
 
 group 'pl.fratik'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
-def jdaVersion = '4.3.0_339'
+def jdaVersion = '5.0.0-alpha.11'
 
 repositories {
     mavenCentral()
@@ -24,16 +24,15 @@ repositories {
 
 
 dependencies {
-//    implementation('net.dv8tion:JDA:' + jdaVersion) {
-    implementation('com.github.caneleex:JDA:b11e94e598') {
+    implementation('net.dv8tion:JDA:' + jdaVersion) {
         exclude module: 'opus-java'
     }
-    implementation 'com.intellij:annotations:+@jar'
-    implementation 'org.slf4j:slf4j-api:1.7.5'
-    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'com.intellij:annotations:12.0@jar'
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'ch.qos.logback:logback-classic:1.2.11'
     implementation 'org.tuxdude.logback.extensions:logback-colorizer:1.0.1'
-    implementation 'com.google.guava:guava:21.0'
-    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'com.github.queer:async-postgres-jsonb-orm:e348e109f8'
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 }

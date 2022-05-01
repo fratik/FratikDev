@@ -11,20 +11,21 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateBoostTimeEvent;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.role.update.RoleUpdatePositionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Button;
-import net.dv8tion.jda.api.interactions.components.Component;
+import net.dv8tion.jda.api.interactions.components.ItemComponent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.order.RoleOrderAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -71,21 +72,21 @@ public class Komendy {
         List<SubcommandGroupData> adminSubCommands = new ArrayList<>();
         List<CommandData> boosterCommands = new ArrayList<>();
         List<CommandData> allCommands = new ArrayList<>();
-        allCommands.add(new CommandData("wersja", "Wersja bota"));
+        allCommands.add(Commands.slash("wersja", "Wersja bota"));
         if (Config.instance.funkcje.komendy.suffix) {
-            adminCommands.add(new CommandData("suffix", "Dodaje tekst do nicku każdej osoby na serwerze")
+            adminCommands.add(Commands.slash("suffix", "Dodaje tekst do nicku każdej osoby na serwerze")
                     .addOption(OptionType.STRING, "tekst", "Tekst do dodania", true));
-            adminCommands.add(new CommandData("usunsuffix", "Usuwa tekst do nicku każdej osoby na serwerze")
+            adminCommands.add(Commands.slash("usunsuffix", "Usuwa tekst do nicku każdej osoby na serwerze")
                     .addOption(OptionType.STRING, "tekst", "Tekst do usunięcia", true));
         }
         if (Config.instance.funkcje.komendy.naprawnicki) {
-            adminCommands.add(new CommandData("naprawnicki", "Naprawia nicki wszystkich osób na serwerze"));
+            adminCommands.add(Commands.slash("naprawnicki", "Naprawia nicki wszystkich osób na serwerze"));
         }
         if (Config.instance.funkcje.komendy.weryfikacja) {
-            adminCommands.add(new CommandData("weryfikacja", "Włącza/wyłącza weryfikację"));
+            adminCommands.add(Commands.slash("weryfikacja", "Włącza/wyłącza weryfikację"));
         }
         if (Config.instance.funkcje.weryfikacja.zezwolNaZmianeNicku) {
-            allCommands.add(new CommandData("nick", "Zmienia Twój nick na serwerze")
+            allCommands.add(Commands.slash("nick", "Zmienia Twój nick na serwerze")
                     .addOption(OptionType.STRING, "nick", "Nowy nick (nie wypełniaj by usunąć)", false));
             List<SubcommandData> subs = new ArrayList<>();
             if (Config.instance.funkcje.komendy.ustawNick) {
@@ -108,7 +109,7 @@ public class Komendy {
                 if (customRole.zezwolNaZmianeKoloru && customRole.zezwolNaZmianeIkony) desc = "z kolorem i ikoną";
                 else if (customRole.zezwolNaZmianeKoloru) desc = "z kolorem";
                 else desc = "z ikoną";
-                allCommands.add(new CommandData("personalizacja", "Otwiera menu zmiany Twojej roli " + desc + "."));
+                allCommands.add(Commands.slash("personalizacja", "Otwiera menu zmiany Twojej roli " + desc + "."));
                 List<SubcommandData> subs = new ArrayList<>();
                 if (Config.instance.funkcje.komendy.edytujRole) {
                     subs.add(new SubcommandData("edytuj", "Otwiera menu edycji roli podanej osoby")
@@ -125,7 +126,7 @@ public class Komendy {
                 adminSubCommands.add(new SubcommandGroupData("personalizacja", "Zarządzanie rolami personalizującymi").addSubcommands(subs));
             }
         }
-        adminCommands.add(new CommandData("admin", "Ogólna komenda administracyjna").addSubcommandGroups(adminSubCommands));
+        adminCommands.add(Commands.slash("admin", "Ogólna komenda administracyjna").addSubcommandGroups(adminSubCommands));
         adminCommands.forEach(c -> c.setDefaultEnabled(false));
         if (fdev.getBoostRole() == null) boosterCommands.clear();
         boosterCommands.forEach(c -> c.setDefaultEnabled(false));
@@ -138,7 +139,7 @@ public class Komendy {
 
     @Subscribe
     @AllowConcurrentEvents
-    public void onCommand(SlashCommandEvent e) {
+    public void onCommand(SlashCommandInteractionEvent e) {
         switch (e.getCommandPath()) {
             case "wersja": {
                 e.reply("FratikDev " + getClass().getPackage().getImplementationVersion()).setEphemeral(true).complete();
@@ -265,7 +266,7 @@ public class Komendy {
                         + "#" + e.getUser().getDiscriminator() + ", " + e.getUser().getId() + ") zmienił swój nick!");
                 if (nick != null) eb.addField("Nowy nick", nick, false);
                 else eb.addField("Nick", "zresetowany", false);
-                e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
+                e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
                 break;
             }
             case "admin/nick/blacklist": {
@@ -296,7 +297,7 @@ public class Komendy {
                 eb.setDescription(mem.getAsMention() + " (" + mem.getUser().getAsTag() + ", " + mem.getId() + ")");
                 eb.addField("Osoba blacklistująca", e.getUser().getAsMention(), false);
                 eb.addField("Status blacklisty", weryfikacja.isNicknameBlacklist() ? "dodano" : "usunięto", false);
-                e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
+                e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
                 break;
             }
             case "admin/nick/ustaw": {
@@ -345,7 +346,7 @@ public class Komendy {
                 eb.addField("Zmieniający nick", e.getUser().getAsMention(), false);
                 if (nick != null) eb.addField("Nowy nick", nick, false);
                 else eb.addField("Nick", "zresetowany", false);
-                e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessage(eb.build()).queue();
+                e.getJDA().getTextChannelById(Config.instance.kanaly.logiWeryfikacji).sendMessageEmbeds(eb.build()).queue();
                 break;
             }
             case "personalizacja":
@@ -555,16 +556,16 @@ public class Komendy {
         Boolean changeRoleColor; // true - zmień, false - dodaj, null - brak możliwości
         if (Config.instance.funkcje.customRole.zezwolNaZmianeIkony) {
             if (role.getGuild().getFeatures().contains("ROLE_ICONS")) {
-                if (role.getIconId() != null) {
-                    eb.addField("Ikona roli", "jest wyświetlona w embedzie", true);
-                    eb.setThumbnail(role.getIconUrl());
-                    changeRoleIcon = true;
-                } else if (role.getEmoji() != null) {
-                    eb.addField("Ikona roli", role.getEmoji(), true);
-                    changeRoleIcon = true;
-                } else {
+                if (role.getIcon() == null) {
                     eb.addField("Ikona roli", "nie została ustawiona", true);
                     changeRoleIcon = false;
+                } else if (!role.getIcon().isEmoji()) {
+                    eb.addField("Ikona roli", "jest wyświetlona w embedzie", true);
+                    eb.setThumbnail(role.getIcon().getIconUrl());
+                    changeRoleIcon = true;
+                } else {
+                    eb.addField("Ikona roli", role.getIcon().getEmoji(), true);
+                    changeRoleIcon = true;
                 }
             } else {
                 eb.addField("Ikona roli", "Serwer nie ma dostępu do ikon. Prawdopodobnie brakuje boostów.", false);
@@ -587,8 +588,8 @@ public class Komendy {
         eb.addField("Ostrzeżenie!", "Wciśnięcie przycisku spowoduje wysłanie widocznej dla wszystkich " +
                 "wiadomości na chacie. Upewnij się, że jesteś na kanale gdzie komendy są dozwolone.", false);
         MessageBuilder mb = new MessageBuilder(eb.build());
-        List<Component> components = new ArrayList<>();
-        List<Component> components2 = new ArrayList<>();
+        List<ItemComponent> components = new ArrayList<>();
+        List<ItemComponent> components2 = new ArrayList<>();
         if (changeRoleIcon != null) {
             if (changeRoleIcon) { //NOSONAR
                 components.add(Button.primary("SET_ICON", "Zmień ikonę"));
@@ -679,7 +680,7 @@ public class Komendy {
 
     @Subscribe
     @AllowConcurrentEvents
-    public void onButtonClick(@NotNull ButtonClickEvent e) {
+    public void onButtonClick(@NotNull ButtonInteractionEvent e) {
         if (!e.isFromGuild() || !e.getGuild().getId().equals(Config.instance.guildId)) return;
         String roleId;
         if (e.getMessage().getEmbeds().size() != 1) return;
@@ -702,7 +703,7 @@ public class Komendy {
                     try {
                         //todo lepsza detekcja czy emotka XD
                         if (m.getMessage().getContentRaw().length() > 4) throw new Exception("raczej nie emotka");
-                        role.getManager().setEmoji(m.getMessage().getContentRaw()).complete();
+                        role.getManager().setIcon(m.getMessage().getContentRaw()).complete();
                     } catch (Exception ex) {
                         m.getMessage().reply("Twoja wiadomość nie zawiera załączników ani prawidłowej emotki.").queue();
                         return;
@@ -801,7 +802,7 @@ public class Komendy {
         }
         if (e.getComponentId().equals("DELETE_ICON") && Config.instance.funkcje.customRole.zezwolNaZmianeIkony) {
             e.deferReply().queue();
-            role.getManager().setIcon(null).setEmoji(null).complete();
+            role.getManager().setIcon((Icon) null).complete();
             if (Config.instance.funkcje.customRole.logi) {
                 try {
                     EmbedBuilder eb = new EmbedBuilder();
@@ -928,7 +929,7 @@ public class Komendy {
 
     @Subscribe
     @AllowConcurrentEvents
-    public void onButton(ButtonClickEvent e) {
+    public void onButton(ButtonInteractionEvent e) {
         if (!e.isFromGuild()) return;
         if (e.getComponentId().equals("NICK_PROGRESS")) {
             if (nickJob == null) {

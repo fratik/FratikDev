@@ -30,6 +30,8 @@ public class Config {
     public static class Wiadomosci {
         public String zatwierdzRegulaminTresc = "";
         public String zatwierdzRegulaminWiadomoscBota = null;
+        public String urlopTresc = "";
+        public String urlopWiadomoscBota = null;
     }
 
     public static class Emotki {

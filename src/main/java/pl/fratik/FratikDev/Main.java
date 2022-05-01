@@ -68,7 +68,7 @@ public class Main {
         managerBazyDanych.load();
         EventWaiter eventWaiter = new EventWaiter(Executors.newSingleThreadScheduledExecutor(), false);
         Urlopy urlopy;
-        if (Config.instance.funkcje.urlopy) urlopy = new Urlopy(managerBazyDanych, eventWaiter, jda);
+        if (Config.instance.funkcje.urlopy) urlopy = new Urlopy(managerBazyDanych, jda);
         else urlopy = null;
         Weryfikacja weryfikacja;
         if (Config.instance.funkcje.weryfikacja.wlaczone) weryfikacja = new Weryfikacja(managerBazyDanych, jda);

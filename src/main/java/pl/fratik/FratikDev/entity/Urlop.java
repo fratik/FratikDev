@@ -18,7 +18,8 @@ public class Urlop implements DatabaseEntity {
     private String id;
     private Date dataOd;
     private Date dataDo;
-    private String messageId;
+    @Setter private String messageId;
+    private String powod;
     @Setter private boolean zatwierdzone = false;
     @Setter @Nullable private Date cooldownTo;
     @Setter private boolean valid = false;
@@ -27,7 +28,7 @@ public class Urlop implements DatabaseEntity {
 
     }
 
-    public Urlop(@NotNull String id, @NotNull Date dataOd, @NotNull Date dataDo, @NotNull String messageId) {
+    public Urlop(@NotNull String id, @NotNull Date dataOd, @NotNull Date dataDo, @NotNull String powod, @Nullable String messageId) {
         this.id = id;
         this.dataOd = dataOd;
         this.dataDo = dataDo;

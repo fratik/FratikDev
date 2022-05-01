@@ -15,6 +15,8 @@ public interface ManagerBazyDanych {
 
     Urlop getUrlop(User user);
 
+    Urlop getUrlopByMessageId(String id);
+
     SuffixData getSuffix(Guild guild);
 
     List<Urlop> getAllUrlopy();
