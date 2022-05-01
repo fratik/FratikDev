@@ -22,7 +22,6 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
-import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -130,11 +129,20 @@ public class Komendy {
         adminCommands.forEach(c -> c.setDefaultEnabled(false));
         if (fdev.getBoostRole() == null) boosterCommands.clear();
         boosterCommands.forEach(c -> c.setDefaultEnabled(false));
+        logger.warn("UWAGA!");
+        logger.warn("Bot utworzy komendy BEZ UPRAWNIEŃ, należy wejść do ustawień serwera i manualnie je edytować!");
+        logger.warn("Zostanie to w przyszłości naprawione, poczekaj 5 sekund...");
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
         List<Command> commands = fdev.updateCommands().addCommands(adminCommands).addCommands(boosterCommands).addCommands(allCommands).complete();
-        commands.stream().filter(c -> adminCommands.stream().anyMatch(d -> d.getName().equals(c.getName())))
-                .forEach(c -> c.updatePrivileges(fdev, CommandPrivilege.enableRole(Config.instance.role.admin)).complete());
-        commands.stream().filter(c -> boosterCommands.stream().anyMatch(d -> d.getName().equals(c.getName())))
-                .forEach(c -> c.updatePrivileges(fdev, CommandPrivilege.enable(fdev.getBoostRole())).complete());
+//        commands.stream().filter(c -> adminCommands.stream().anyMatch(d -> d.getName().equals(c.getName())))
+//                .forEach(c -> c.updatePrivileges(fdev, CommandPrivilege.enableRole(Config.instance.role.admin)).complete());
+//        commands.stream().filter(c -> boosterCommands.stream().anyMatch(d -> d.getName().equals(c.getName())))
+//                .forEach(c -> c.updatePrivileges(fdev, CommandPrivilege.enable(fdev.getBoostRole())).complete());
     }
 
     @Subscribe
