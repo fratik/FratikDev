@@ -162,9 +162,12 @@ public class Urlopy {
         if (!e.getChannel().getId().equals(Config.instance.kanaly.urlopyGa)) return;
         if (e.getUser().equals(e.getJDA().getSelfUser())) return;
         if (e.getComponentId().equals(CREATE_BUTTON_ID)) {
-            TextInput from = TextInput.create(CREATE_MODAL_FROM, "Data od (DD-MM-YYYY)", TextInputStyle.SHORT).build();
-            TextInput to = TextInput.create(CREATE_MODAL_TO, "Data do (DD-MM-YYYY)", TextInputStyle.SHORT).build();
-            TextInput reason = TextInput.create(CREATE_MODAL_REASON, "Powód urlopu", TextInputStyle.PARAGRAPH).build();
+            TextInput from = TextInput.create(CREATE_MODAL_FROM, "Data od (DD-MM-YYYY)", TextInputStyle.SHORT)
+                    .setRequiredRange(10, 10).build();
+            TextInput to = TextInput.create(CREATE_MODAL_TO, "Data do (DD-MM-YYYY)", TextInputStyle.SHORT)
+                    .setRequiredRange(10, 10).build();
+            TextInput reason = TextInput.create(CREATE_MODAL_REASON, "Powód urlopu", TextInputStyle.PARAGRAPH)
+                    .setRequiredRange(1, 1000).build();
             e.replyModal(Modal.create(CREATE_MODAL_ID, "Zgłoś urlop")
                     .addActionRows(ActionRow.of(from), ActionRow.of(to), ActionRow.of(reason))
                     .build()).complete();
@@ -226,7 +229,8 @@ public class Urlopy {
                 return;
             }
             e.replyModal(Modal.create(REJECT_MODAL_ID + e.getMessageId(), "Odrzucanie urlopu")
-                    .addActionRow(TextInput.create(REJECT_MODAL_REASON, "Powód odrzucenia urlopu", TextInputStyle.PARAGRAPH).build())
+                    .addActionRow(TextInput.create(REJECT_MODAL_REASON, "Powód odrzucenia urlopu", TextInputStyle.PARAGRAPH)
+                            .setMaxLength(1000).build())
                     .build()).complete();
         }
         if (e.getComponentId().equals(DELETE_BUTTON_ID)) {
@@ -238,7 +242,8 @@ public class Urlopy {
                 return;
             }
             e.replyModal(Modal.create(DELETE_MODAL_ID + msg.getId(), "Anulowanie urlopu")
-                    .addActionRow(TextInput.create(DELETE_MODAL_REASON, "Powód anulowania", TextInputStyle.PARAGRAPH).build())
+                    .addActionRow(TextInput.create(DELETE_MODAL_REASON, "Powód anulowania", TextInputStyle.PARAGRAPH)
+                            .setMaxLength(1000).build())
                     .build()).complete();
         }
     }
@@ -262,7 +267,9 @@ public class Urlopy {
                         new EmbedBuilder().setAuthor(e.getUser().getName() + "#" + e.getUser().getDiscriminator(),
                                         null, e.getUser().getEffectiveAvatarUrl().replace(".webp", ".png"))
                                 .setColor(Color.decode("#ff0000")).setFooter("Odrzucony urlop", null)
-                                .addField("Treść urlopu", reason, false)
+                                .addField("Urlop ważny od", from, true)
+                                .addField("Urlop ważny do", to, true)
+                                .addField("Powód urlopu", reason, false)
                                 .addField("Powód odrzucenia", "Nieprawidłowy format", false)
                                 .addField("Osoba odrzucająca", e.getJDA().getSelfUser().getAsMention(), false)
                                 .build()
@@ -288,7 +295,9 @@ public class Urlopy {
                         new EmbedBuilder().setAuthor(e.getUser().getName() + "#" + e.getUser().getDiscriminator(),
                                         null, e.getUser().getEffectiveAvatarUrl().replace(".webp", ".png"))
                                 .setColor(Color.decode("#ff0000")).setFooter("Odrzucony urlop", null)
-                                .addField("Treść urlopu", reason, false)
+                                .addField("Urlop ważny od", from, true)
+                                .addField("Urlop ważny do", to, true)
+                                .addField("Powód urlopu", reason, false)
                                 .addField("Powód odrzucenia", "Nieprawidłowy format", false)
                                 .addField("Osoba odrzucająca", e.getJDA().getSelfUser().getAsMention(), false)
                                 .build()
@@ -301,7 +310,9 @@ public class Urlopy {
                         new EmbedBuilder().setAuthor(e.getUser().getName() + "#" + e.getUser().getDiscriminator(),
                                         null, e.getUser().getEffectiveAvatarUrl().replace(".webp", ".png"))
                                 .setColor(Color.decode("#ff0000")).setFooter("Odrzucony urlop", null)
-                                .addField("Treść urlopu", reason, false)
+                                .addField("Urlop ważny od", sdf.format(dateFrom), true)
+                                .addField("Urlop ważny do", sdf.format(dateTo), true)
+                                .addField("Powód urlopu", reason, false)
                                 .addField("Powód odrzucenia", "Różnica dat krótsza od 3 dni", false)
                                 .addField("Osoba odrzucająca", e.getJDA().getSelfUser().getAsMention(), false)
                                 .build()
@@ -321,13 +332,16 @@ public class Urlopy {
                         new EmbedBuilder().setAuthor(e.getUser().getName() + "#" + e.getUser().getDiscriminator(),
                                         null, e.getUser().getEffectiveAvatarUrl().replace(".webp", ".png"))
                                 .setColor(Color.decode("#ff0000")).setFooter("Odrzucony urlop", null)
-                                .addField("Treść urlopu", reason, false)
+                                .addField("Urlop ważny od", sdf.format(data.getDataOd()), true)
+                                .addField("Urlop ważny do", sdf.format(data.getDataDo()), true)
+                                .addField("Powód urlopu", reason, false)
                                 .addField("Powód odrzucenia", "Cooldown", false)
                                 .addField("Osoba odrzucająca", e.getJDA().getSelfUser().getAsMention(), false)
                                 .build()
                 ).queue();
                 return;
             }
+            e.deferEdit().complete();
             Role zga = e.getGuild().getRoleById(Config.instance.role.zarzadzajacyGa);
             data = new Urlop(e.getUser().getId(), dateFrom, dateTo, reason, null);
             Message msg = e.getMessageChannel().sendMessage("**Urlop niezatwierdzony!** " + zga.getAsMention())
@@ -413,7 +427,7 @@ public class Urlopy {
         return new EmbedBuilder()
                 .setAuthor(user.getAsTag(), null, user.getEffectiveAvatarUrl())
                 .addField("Urlop ważny od", sdf.format(urlop.getDataOd()), true)
-                .addField("Urlop ważny do", sdf.format(urlop.getDataOd()), true)
+                .addField("Urlop ważny do", sdf.format(urlop.getDataDo()), true)
                 .addField("Powód urlopu", urlop.getPowod(), false)
                 .build();
     }

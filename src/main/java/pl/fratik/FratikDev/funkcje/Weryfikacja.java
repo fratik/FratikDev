@@ -165,7 +165,7 @@ public class Weryfikacja {
     @Subscribe
     @AllowConcurrentEvents
     public void onMessage(MessageReceivedEvent e) {
-        if (!e.getGuild().getId().equals(Config.instance.guildId)) return;
+        if (!e.isFromGuild() || !e.getGuild().getId().equals(Config.instance.guildId)) return;
         User author = e.getAuthor();
         if (author.isBot()) return;
         WeryfikacjaInfo info = managerBazyDanych.getWeryfikacja(author);

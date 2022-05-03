@@ -139,6 +139,7 @@ public class Komendy {
             return;
         }
         List<Command> commands = fdev.updateCommands().addCommands(adminCommands).addCommands(boosterCommands).addCommands(allCommands).complete();
+        logger.info("Komendy utworzone!");
 //        commands.stream().filter(c -> adminCommands.stream().anyMatch(d -> d.getName().equals(c.getName())))
 //                .forEach(c -> c.updatePrivileges(fdev, CommandPrivilege.enableRole(Config.instance.role.admin)).complete());
 //        commands.stream().filter(c -> boosterCommands.stream().anyMatch(d -> d.getName().equals(c.getName())))

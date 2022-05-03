@@ -45,7 +45,7 @@ public class ManagerBazyDanychImpl implements ManagerBazyDanych {
 
     @Override
     public Urlop getUrlopByMessageId(String id) {
-        List<Urlop> data = pgStore.mapSync(Urlop.class).loadManyBySubkey("data->'messageId'", id);
+        List<Urlop> data = pgStore.mapSync(Urlop.class).loadManyBySubkey("data->>'messageId'", id);
         return data.isEmpty() ? null : data.get(0);
     }
 

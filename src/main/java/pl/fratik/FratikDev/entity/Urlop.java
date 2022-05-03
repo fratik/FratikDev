@@ -33,6 +33,7 @@ public class Urlop implements DatabaseEntity {
         this.dataOd = dataOd;
         this.dataDo = dataDo;
         this.messageId = messageId;
+        this.powod = powod;
     }
 
     @Override
